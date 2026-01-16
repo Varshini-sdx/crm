@@ -1,0 +1,125 @@
+.wrapper {
+  min-height: 100vh;
+  background: #f7f6fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 900px;
+  background: linear-gradient(180deg, #ffffff, #f5f2ff);
+  border-radius: 22px;
+  padding: 3rem 3.5rem;
+  box-shadow: 0 30px 70px rgba(92, 72, 150, 0.18);
+}
+
+.header {
+  margin-bottom: 2.5rem;
+}
+
+.step {
+  font-size: 0.8rem;
+  color: #8b80c9;
+}
+
+.header h1 {
+  font-size: 2.2rem;
+  color: #3a2f6e;
+  margin: 0.4rem 0;
+}
+
+.header p {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.section h3 {
+  font-size: 1.1rem;
+  color: #3a2f6e;
+  margin-bottom: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem 1.6rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.inputGroup label {
+  font-size: 0.8rem;
+  color: #5b567a;
+}
+
+.inputGroup input,
+.inputGroup select,
+.inline input,
+.inline select {
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+  font-size: 0.9rem;
+}
+
+.inputGroup input:focus,
+.inputGroup select:focus,
+.inline input:focus,
+.inline select:focus {
+  border-color: #6b5fd3;
+  box-shadow: 0 0 0 3px rgba(107, 95, 211, 0.15);
+}
+
+.inline {
+  display: flex;
+  gap: 1rem;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.primaryBtn {
+  padding: 0.9rem 1.8rem;
+  border-radius: 14px;
+  border: none;
+  background: #0f1c3f;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.primaryBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(15, 28, 63, 0.35);
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 2rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inline {
+    flex-direction: column;
+  }
+}
