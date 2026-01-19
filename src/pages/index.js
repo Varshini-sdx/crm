@@ -12,6 +12,8 @@ import ChangePassword from "./Reset Password/changePassword";
 import OrganisationSetup from "./organisation setup"
 import Dashboard from "./dashboard"
 
+import Main from "./dashboard components/main";
+
 export {
     Home,
     Features,
@@ -26,7 +28,8 @@ export {
     ChangePassword,
 
     OrganisationSetup,
-    Dashboard
+    Dashboard,
 
+    Main
 
 }

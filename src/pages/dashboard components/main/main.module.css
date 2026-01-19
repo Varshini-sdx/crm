@@ -1,0 +1,137 @@
+.sectionTitle {
+  color: #1f2a44;
+  margin-bottom: 0.6rem;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.kpiCard {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 14px 30px rgba(80, 70, 160, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow: hidden;
+  transition: 0.25s ease;
+}
+
+.kpiCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.kpiCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 50px rgba(80, 70, 160, 0.25);
+}
+
+.kpiTitle {
+  font-size: 0.75rem;
+  color: #6b6f90;
+  letter-spacing: 0.03em;
+}
+
+.kpiValue {
+  font-size: 1.9rem;
+  color: #1f2a44;
+}
+
+.kpiSub {
+  font-size: 0.7rem;
+  color: #7a7fa3;
+}
+
+/* Gradient personalities */
+.kpiLeads::before {
+  background: linear-gradient(135deg, #a18cff, #2e00fc);
+}
+
+.kpiDeals::before {
+  background: linear-gradient(135deg, #7cf0c5, #01ff99);
+}
+
+.kpiRevenue::before {
+  background: linear-gradient(135deg, #ffd27c, #ffaa00);
+}
+
+.kpiTasks::before {
+  background: linear-gradient(135deg, #ff9bb0, #ff003c);
+}
+
+
+
+
+/* -------- quick Actions -------  */
+.quickWrap {
+  margin-top: 1.6rem;
+}
+
+.quickLabel {
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b6f90;
+  margin-bottom: 0.6rem;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+}
+
+.quickCard {
+  background: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  color: #1f2a44;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(80, 70, 160, 0.15);
+  position: relative;
+  overflow: hidden;
+  transition: 0.22s ease;
+}
+
+.quickCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.quickCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(80, 70, 160, 0.22);
+}
+
+/* Soft personalities */
+.qaLead::before {
+  background: linear-gradient(135deg, #a18cff, #e0d9ff);
+}
+
+.qaTask::before {
+  background: linear-gradient(135deg, #7cf0c5, #dcfff1);
+}
+
+.qaCall::before {
+  background: linear-gradient(135deg, #ffd27c, #fff1d6);
+}
+
+.qaContact::before {
+  background: linear-gradient(135deg, #ff9bb0, #ffe0e7);
+}

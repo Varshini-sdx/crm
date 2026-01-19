@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import styles from "./dashboard.module.css";
 import { useNavigate } from "react-router-dom";
+import Main from "../dashboard components/main";
+
 
 
 const fakeOrg = {
@@ -96,89 +98,47 @@ export default function Dashboard() {
             <div className={styles.layout}>
                 {/* Sidebar */}
                 <aside className={styles.sidebar}>
+
                     <div className={styles.orgBlock}>
-                        <h3>{fakeOrg.name}</h3>
-                        <select
-                            value={branch.id}
-                            onChange={(e) =>
-                                setBranch(fakeOrg.branches.find(b => b.id === Number(e.target.value)))
-                            }
-                        >
-                            {fakeOrg.branches.map(b => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}, {b.state}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                        <h3 className={styles.orgName}>{fakeOrg.name}</h3>
 
-                    {/*<nav className={styles.nav}>
-          {navItems.map(item => (
-            <button
-              key={item}
-              className={`${styles.navItem} ${active === item ? styles.active : ""}`}
-              onClick={() => setActive(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </nav> */}
-
-                    <nav className={styles.nav}>
-                        {navItems.slice(0, 6).map(item => (
+                        <div className={styles.branchSwitcher}>
                             <button
-                                key={item}
-                                className={`${styles.navItem} ${active === item ? styles.active : ""}`}
-                                onClick={() => setActive(item)}
+                                className={styles.branchPill}
+                                onClick={() => setOpenState(openState === "switcher" ? null : "switcher")}
                             >
-                                {item}
-                            </button>
-                        ))}
-
-                        <div className={styles.divider} />
-
-                        {/* Workspace Tree */}
-                        <div className={styles.workspaceBlock}>
-                            <button
-                                className={styles.workspaceTitle}
-                                onClick={() => setOpenWorkspace(!openWorkspace)}
-                            >
-                                Workspace (Admin)
+                                {branch.state} · {branch.name}
+                                <span className={styles.chevron}>⌄</span>
                             </button>
 
-                            {openWorkspace && (
-                                <div className={styles.tree}>
-                                    {workspace.states.map((s, i) => (
-                                        <div key={s.name}>
-                                            <div
-                                                className={styles.state}
-                                                onClick={() => setOpenState(openState === i ? null : i)}
-                                            >
-                                                {s.name}
-                                            </div>
-
-                                            {openState === i &&
-                                                s.branches.map(b => (
-                                                    <div key={b} className={styles.branch}>
-                                                        {b}
-                                                    </div>
-                                                ))}
-                                        </div>
-                                    ))}
-
-                                    <div className={styles.usersTitle}>Users</div>
-                                    {workspace.users.map(u => (
-                                        <div key={u} className={styles.user}>
-                                            {u}
+                            {openState === "switcher" && (
+                                <div className={styles.branchDropdown}>
+                                    {workspace.states.map((s) => (
+                                        <div key={s.name} className={styles.ddState}>
+                                            <div className={styles.ddStateName}>{s.name}</div>
+                                            {s.branches.map((b) => (
+                                                <div
+                                                    key={b}
+                                                    className={styles.ddBranch}
+                                                    onClick={() => {
+                                                        setBranch({ name: b, state: s.name });
+                                                        setOpenState(null);
+                                                    }}
+                                                >
+                                                    {b}
+                                                </div>
+                                            ))}
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
+                    </div>
 
-                        <div className={styles.divider} />
 
-                        {["Team", "Organization", "Roles & Permissions", "Settings"].map(item => (
+                    <nav className={styles.nav}>
+                        {/* Main */}
+                        {["Dashboard", "Leads", "Deals", "Tasks", "Contacts", "Reports"].map(item => (
                             <button
                                 key={item}
                                 className={`${styles.navItem} ${active === item ? styles.active : ""}`}
@@ -187,7 +147,49 @@ export default function Dashboard() {
                                 {item}
                             </button>
                         ))}
+
+                        <div className={styles.divider} />
+
+                        {/* Workspace */}
+                        <div className={styles.workspaceSection}>
+                            <div className={styles.workspaceHeading}>Workspace</div>
+
+                            <button className={styles.navItem}>Team</button>
+
+                            {/* States Hover */}
+                            <div className={styles.statesWrap}>
+                                <div className={styles.navItem}>
+                                    States <span className={styles.arrow}>▸</span>
+                                </div>
+
+                                <div className={styles.statesDropdown}>
+                                    {workspace.states.map(s => (
+                                        <div key={s.name} className={styles.stateBlock}>
+                                            <div className={styles.stateName}>{s.name}</div>
+
+                                            {s.branches.map(b => (
+                                                <div
+                                                    key={b}
+                                                    className={styles.branchItem}
+                                                    onClick={() => setBranch({ name: b, state: s.name })}
+                                                >
+                                                    {b}
+                                                </div>
+                                            ))}
+
+                                            <div className={styles.addMini}>+ Add Branch</div>
+                                        </div>
+                                    ))}
+
+                                    <div className={styles.addState}>+ Add State</div>
+                                </div>
+                            </div>
+
+                            <button className={styles.navItem}>Roles & Permissions</button>
+                            <button className={styles.navItem}>Settings</button>
+                        </div>
                     </nav>
+
 
                     {/* Bottom */}
                     <div className={styles.bottomNav}>
@@ -208,7 +210,9 @@ export default function Dashboard() {
                         </div>
 
                         <div className={styles.content}>
-                            {renderContent()}
+                            {/*{renderContent()} */}
+
+                            <Main active={active} branch={branch} />
                         </div>
                     </div>
                 </main>

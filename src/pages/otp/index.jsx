@@ -1,12 +1,19 @@
 import React, { useState } from "react";
+
+import { useNavigate, useLocation } from "react-router-dom";
+
 import styles from "./otp.module.css";
-import bgImg from "../../assets/otp_img.jpg"; 
+import bgImg from "../../assets/otp_img.jpg";
 
 export default function Otp() {
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
 
-    const handleVerify = (e) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const email = location.state?.email;
+
+    {/* const handleVerify = (e) => {
         e.preventDefault();
         console.log("Entered OTP:", otp);
     };
@@ -21,7 +28,60 @@ export default function Otp() {
   } else {
     setError("Only numbers are allowed");
   }
-};
+}; */}
+
+    const handleChange = (e) => {
+        const value = e.target.value;
+
+        if (/^\d*$/.test(value)) {
+            setOtp(value);
+            setError("");
+        } else {
+            setError("Only numbers are allowed");
+        }
+    };
+
+
+    const handleVerify = async (e) => {
+        e.preventDefault();
+        setError("");
+
+        if (otp.length !== 6) {
+            setError("Please enter a 6-digit OTP");
+            return;
+        }
+
+        try {
+            const res = await fetch("http://192.168.1.18:5000/auth/verify-otp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email,
+                    otp,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.status === 409) {
+                // Account already verified → send user to login
+                navigate("/login");
+                return;
+            }
+
+            if (!res.ok) {
+                throw new Error(data.message || "Invalid OTP");
+            }
+
+            // OTP verified → go to login
+            navigate("/login");
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
 
     return (
         <>

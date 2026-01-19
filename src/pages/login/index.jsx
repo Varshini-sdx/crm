@@ -19,7 +19,7 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await fetch("http://127.0.0.1:5000/auth/login", {
+            const res = await fetch("http://192.168.1.18:5000/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -28,13 +28,14 @@ export default function Login() {
             });
 
             const data = await res.json();
+            console.log("LOGIN RESPONSE:", data);
 
-            if (!res.ok || !data.success) {
+            /*if (!res.ok || !data.success) {
                 throw new Error(data.message || "Login failed");
-            }
+            } */
 
             // Success → go to dashboard / home
-            navigate("/dashboard");
+            navigate("/organisation-setup");
         } catch (err) {
             setError(err.message);
         } finally {
