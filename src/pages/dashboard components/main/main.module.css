@@ -26,9 +26,15 @@
 .kpiCard::before {
   content: "";
   position: absolute;
-  inset: 0;
+
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px; 
+  border-radius: 20px 20px 0 0;
+  /*inset: 0;
   opacity: 0.14;
-  pointer-events: none;
+  pointer-events: none; */
 }
 
 .kpiCard:hover {
@@ -52,7 +58,7 @@
   color: #7a7fa3;
 }
 
-/* Gradient personalities */
+/* Gradient personalities 
 .kpiLeads::before {
   background: linear-gradient(135deg, #a18cff, #2e00fc);
 }
@@ -67,12 +73,30 @@
 
 .kpiTasks::before {
   background: linear-gradient(135deg, #ff9bb0, #ff003c);
+} */
+
+
+.kpiLeads::before {
+  background: linear-gradient(90deg, #7b8cff, #0918a0);
+}
+
+.kpiDeals::before {
+  background: linear-gradient(90deg, #4fd1a5, #00b82b);
+}
+
+.kpiRevenue::before {
+  background: linear-gradient(90deg, #ffc56e, #f79106);
+}
+
+.kpiTasks::before {
+  background: linear-gradient(90deg, #ff8fa3, #ff00a0);
 }
 
 
 
 
-/* -------- quick Actions -------  */
+
+/* -------- quick Actions -------  
 .quickWrap {
   margin-top: 1.6rem;
 }
@@ -117,9 +141,9 @@
 .quickCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px rgba(80, 70, 160, 0.22);
-}
+} */
 
-/* Soft personalities */
+/* Soft personalities 
 .qaLead::before {
   background: linear-gradient(135deg, #a18cff, #e0d9ff);
 }
@@ -134,4 +158,320 @@
 
 .qaContact::before {
   background: linear-gradient(135deg, #ff9bb0, #ffe0e7);
+} */
+
+
+
+/* -------- CHARTS SECTION  ----------- */
+/* ---- GROWTH SECTION ---- */
+.growthSection {
+  margin-top: 3rem;
+}
+
+.growthHeader h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(90deg, #7417e7, #1e033b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.growthHeader p {
+  color: #7a7fa3;
+  margin-top: 0.25rem;
+}
+
+.growthGrid {
+  margin-top: 1.6rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.6rem;
+}
+
+/* Revenue */
+.revenueCard {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 1.6rem;
+  box-shadow: 0 18px 45px rgba(90, 80, 170, 0.18);
+}
+
+.revenueTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.revenueTop h3 {
+  font-size: 1.05rem;
+  color: #1f2a44;
+}
+
+.revenueTop span {
+  font-size: 0.7rem;
+  color: #8a8fb2;
+}
+
+.revenueValue {
+  font-size: 1.2rem;
+  color: #6b5cff;
+}
+
+.revenueChart {
+  margin-top: 1.2rem;
+  height: 190px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  position: relative;
+
+  z-index: 0;
+}
+
+.revenueChart::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to top,
+    rgba(120, 120, 160, 0.08),
+    rgba(120, 120, 160, 0.08) 1px,
+    transparent 1px,
+    transparent 38px
+  );
+
+  z-index: 1;
+}
+
+.revenueBarWrap {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+
+  z-index: 2;
+  height: 100%;
+}
+
+.revenueBar {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, #c3b6ff, #6b5cff);
+}
+
+.monthRow {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: #9aa0c3;
+}
+
+/* Today */
+/* Today */
+.todayCard {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 1.4rem;
+  box-shadow: 0 18px 45px rgba(90, 80, 170, 0.16);
+  position: relative;
+  overflow: hidden;
+}
+
+.todayCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(107,92,255,0.06), transparent 40%);
+  pointer-events: none;
+}
+
+.todayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.todayHeader h3 {
+  font-size: 1.05rem;
+  color: #1f2a44;
+}
+
+.todayHeader span {
+  font-size: 0.7rem;
+  color: #8a8fb2;
+}
+
+.todayList {
+  margin-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.todayItem {
+  display: grid;
+  grid-template-columns: 10px 46px 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 14px;
+  background: #fafaff;
+  transition: 0.25s ease;
+  position: relative;
+}
+
+.todayItem::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 100%;
+  width: 1px;
+  height: 14px;
+  background: linear-gradient(to bottom, rgba(120,120,160,0.25), transparent);
+}
+
+.todayItem:last-child::after {
+  display: none;
+}
+
+.todayItem:hover {
+  background: linear-gradient(90deg, #f4f2ff, #ffffff);
+  transform: translateX(2px);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.call .dot { background: #6512ae; }
+.follow .dot { background: #6512ae; }
+.meet .dot { background: #6512ae; }
+.work .dot { background: #6512ae; }
+
+.time {
+  font-size: 0.7rem;
+  color: #5ea1e2;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .growthGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .revenueChart {
+    height: 150px;
+    gap: 6px;
+  }
+}
+
+
+/* ------------   Leads   ---------------- */ 
+
+/* -------- LEADS -------- */
+
+.leadsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.leadsSub {
+  font-size: 0.75rem;
+  color: #7a7fa3;
+  margin-top: 0.2rem;
+}
+
+.leadsActions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.leadsSearch {
+  padding: 0.5rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid #e6e6f5;
+  font-size: 0.75rem;
+  outline: none;
+}
+
+.addLeadBtn {
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #7b8cff, #4b5cff);
+  color: #fff;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.leadsTableWrap {
+  margin-top: 1.2rem;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 16px 40px rgba(90, 80, 170, 0.16);
+  padding: 1rem;
+}
+
+.leadsTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.leadsRowHead,
+.leadsRow {
+  display: grid;
+  grid-template-columns: 1.4fr 1.6fr 1fr 1fr 1fr;
+  padding: 0.6rem 0.4rem;
+  font-size: 0.75rem;
+}
+
+.leadsRowHead {
+  color: #7a7fa3;
+  border-bottom: 1px solid #f0f0fa;
+}
+
+.leadsRow {
+  color: #1f2a44;
+  border-radius: 10px;
+  transition: 0.2s ease;
+}
+
+.leadsRow:hover {
+  background: #fafaff;
+}
+
+.sourceTag {
+  font-size: 0.65rem;
+  color: #6b5cff;
+}
+
+.statusPill {
+  font-size: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.new {
+  background: #eef0ff;
+  color: #4b5cff;
+}
+
+.contacted {
+  background: #e9fbf5;
+  color: #2fa37c;
+}
+
+.qualified {
+  background: #fff3e6;
+  color: #d47a00;
 }

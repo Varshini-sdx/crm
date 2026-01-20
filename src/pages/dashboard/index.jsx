@@ -52,6 +52,7 @@ export default function Dashboard() {
     const [active, setActive] = useState("Dashboard");
     const [branch, setBranch] = useState(fakeOrg.branches[0]);
 
+
     const [openState, setOpenState] = useState(null);
     const [openWorkspace, setOpenWorkspace] = useState(true);
 

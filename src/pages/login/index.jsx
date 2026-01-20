@@ -28,11 +28,12 @@ export default function Login() {
             });
 
             const data = await res.json();
-            console.log("LOGIN RESPONSE:", data);
+            console.log("LOGIN RESPONSE:", data, res.ok);
+            
 
-            /*if (!res.ok || !data.success) {
+            if (!res.ok) {
                 throw new Error(data.message || "Login failed");
-            } */
+            } 
 
             // Success → go to dashboard / home
             navigate("/organisation-setup");
