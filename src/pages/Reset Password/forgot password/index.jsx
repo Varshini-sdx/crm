@@ -13,7 +13,7 @@ export default function ForgotPassword() {
     const [error, setError] = useState("");
 
 
-    const handleSubmit = (e) => {
+    {/*const handleSubmit = (e) => {
         e.preventDefault();
 
         if (!email.trim()) {
@@ -24,7 +24,40 @@ export default function ForgotPassword() {
         setError("");
         setSent(true);
         navigate("/reset-otp");
+    }; */}
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!email.trim()) {
+            setError("Please enter your email address.");
+            return;
+        }
+
+        setError("");
+
+        try {
+            const res = await fetch("http://192.168.1.18:5000/auth/forgot-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to send OTP");
+            }
+
+            // OTP sent → go to reset OTP page
+            navigate("/reset-otp", { state: { email } });
+        } catch (err) {
+            setError(err.message);
+        }
     };
+
 
     return (
         <>

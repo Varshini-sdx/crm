@@ -114,6 +114,23 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+/* FORGOT PASSWORD */
+.forgotWrap {
+  text-align: right;
+  /*margin: 6px 0 14px; */
+}
+
+.forgotLink {
+  font-size: 0.85rem;
+  color: #7a64b6;
+  cursor: pointer;
+}
+
+.forgotLink:hover {
+  text-decoration: underline;
+}
+
+
 /* LOGIN BUTTON */
 .loginBtn {
   margin-top: 0.5rem;

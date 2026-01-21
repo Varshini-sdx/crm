@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import styles from "./resetOtp.module.css";
-import { useNavigate, NavLink } from "react-router-dom";
+import { useNavigate, NavLink, useLocation } from "react-router-dom";
 
 
 export default function ResetOtp() {
 
     const navigate = useNavigate();
+
+    const location = useLocation();
+    const email = location.state?.email
+
 
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
@@ -23,7 +27,7 @@ export default function ResetOtp() {
         setOtp(value);
     };
 
-    const handleSubmit = (e) => {
+    {/*const handleSubmit = (e) => {
         e.preventDefault();
 
         if (otp.length !== 6) {
@@ -34,7 +38,77 @@ export default function ResetOtp() {
         console.log("OTP Submitted:", otp);
 
         navigate("/change-password");
+    }; */}
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (otp.length !== 6) {
+            setError("Please enter the 6-digit code");
+            return;
+        }
+
+        setError("");
+
+        try {
+            const res = await fetch("http://192.168.1.18:5000/auth/verify-otp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email,
+                    otp,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Invalid OTP");
+            }
+
+            // OTP verified → go to Change Password page
+            navigate("/change-password", { state: { email, otp } });
+
+        } catch (err) {
+            setError(err.message);
+        }
     };
+
+
+    const handleResend = async () => {
+        setError("");
+
+        if (!email) {
+            setError("Email not found. Please restart the reset flow.");
+            return;
+        }
+
+        try {
+            const res = await fetch("http://192.168.1.18:5000/auth/forgot-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to resend OTP");
+            }
+
+            // Optional: give user feedback
+            setError("A new OTP has been sent to your email.");
+
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+
 
     return (
         <div className={styles.wrapper}>
@@ -63,8 +137,12 @@ export default function ResetOtp() {
                 </form>
 
                 <p className={styles.helper}>
-                    Didn’t receive it? <span className={styles.resend}>Resend OTP</span>
+                    Didn’t receive it?{" "}
+                    <span className={styles.resend} onClick={handleResend}>
+                        Resend OTP
+                    </span>
                 </p>
+
 
                 <p className={styles.helper}>
                     Remembered it?{" "}

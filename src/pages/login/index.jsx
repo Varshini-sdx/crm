@@ -29,11 +29,11 @@ export default function Login() {
 
             const data = await res.json();
             console.log("LOGIN RESPONSE:", data, res.ok);
-            
+
 
             if (!res.ok) {
                 throw new Error(data.message || "Login failed");
-            } 
+            }
 
             // Success → go to dashboard / home
             navigate("/organisation-setup");
@@ -92,6 +92,16 @@ export default function Login() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
+                            </div>
+
+                            {/* Forgot password */}
+                            <div className={styles.forgotWrap}>
+                                <span
+                                    className={styles.forgotLink}
+                                    onClick={() => navigate("/forgot-password")}
+                                >
+                                    Forgot password?
+                                </span>
                             </div>
 
                             {error && <p className={styles.errorText}>{error}</p>}
