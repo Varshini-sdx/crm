@@ -23,6 +23,7 @@ const navItems = [
     "Reports",
     "Team",
     "Organization",
+    "Campaigns",
     "Settings",
 ];
 
@@ -84,6 +85,8 @@ export default function Dashboard() {
                 return <h2>Team Management</h2>;
             case "Organization":
                 return <h2>Organization Settings</h2>;
+            case "Campaigns":
+                return <h2>Marketing Campaigns</h2>;
             case "Settings":
                 return <h2>App Settings</h2>;
             default:
@@ -187,6 +190,7 @@ export default function Dashboard() {
                             </div>
 
                             <button className={styles.navItem}>Roles & Permissions</button>
+                            <button className={styles.navItem}>Campaigns</button>
                             <button className={styles.navItem}>Settings</button>
                         </div>
                     </nav>

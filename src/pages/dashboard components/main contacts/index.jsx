@@ -94,7 +94,7 @@ export default function Contacts() {
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                </table> 
             </div>
 
         </div>

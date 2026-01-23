@@ -1,9 +1,9 @@
 /* CONTACT SECTION MAIN WRAPPER */
+
 .contactSection {
     width: 100%;
     padding: 4rem 2rem;
     background: #d3a1fa;
-    /* lemonade green */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,7 +14,6 @@
     margin-top: 5.4rem;
 }
 
-/* LEFT SIDE */
 .contactLeft {
     flex: 1;
     max-width: 450px;
@@ -24,7 +23,6 @@
     font-size: 2.6rem;
     font-weight: 800;
     color: #333333;
-    /* dark grey */
     margin-bottom: 1rem;
 }
 
@@ -42,12 +40,10 @@
 }
 
 
-/* RIGHT SIDE FORM CARD */
 .contactCard {
     flex: 1;
     max-width: 420px;
     background: #003366;
-    /* midnight blue */
     padding: 2.5rem;
     border-radius: 20px;
     color: white;
@@ -59,7 +55,7 @@
     margin-bottom: 1.5rem;
 }
 
-/* FORM INPUTS */
+
 .contactForm {
     display: flex;
     flex-direction: column;
@@ -79,13 +75,11 @@
     height: 120px;
 }
 
-/* BUTTON */
+
 .contactForm button {
     padding: 1rem;
     background: #d0d9f5;
-    /* lemonade green */
     color: #003366;
-    /* midnight blue for contrast */
     border: none;
     border-radius: 10px;
     font-size: 1.1rem;
@@ -96,4 +90,100 @@
 
 .contactForm button:hover {
     background: #95b1ee;
+} 
+    
+.faqs {
+  margin-top: 3rem;
 }
+
+.faqs details {
+  margin-bottom: 0.6rem;
+}
+
+.cta {
+  margin-top: 3rem;
+  background: #f2efff;
+  padding: 2rem;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.cta button {
+  margin-top: 0.8rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 12px;
+  background: #4b3fa7;
+  color: #fff;
+  border: none;
+}
+
+
+
+
+/*.contactPage {
+  padding: 2.5rem;
+  font-family: inherit;
+  color: #1f2a44;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+}
+
+.quickCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.card {
+  background: #f7f6ff;
+  padding: 1rem;
+  border-radius: 14px;
+  font-size: 0.9rem;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+.form {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(30,20,80,0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.form input,
+.form select,
+.form textarea {
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 0.85rem;
+}
+
+.form button {
+  margin-top: 0.5rem;
+  padding: 0.7rem;
+  border-radius: 12px;
+  background: #4b3fa7;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.details {
+  font-size: 0.85rem;
+} */
+
