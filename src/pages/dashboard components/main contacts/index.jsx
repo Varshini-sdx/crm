@@ -1,4 +1,6 @@
+import { useState } from "react";
 import styles from "./mainContacts.module.css";
+import ContactProfile from "../contact profile";
 
 const contacts = [
     {
@@ -31,11 +33,11 @@ const contacts = [
 ];
 
 export default function Contacts() {
+    const [selectedContact, setSelectedContact] = useState(null);
+
     return (
         <div className={styles.contactsPage}>
 
-            {/* KPI */}
-            {/* KPI */}
             <div className={styles.contactStats}>
                 <div className={`${styles.statCard} ${styles.total}`}>
                     <span>Total Contacts</span>
@@ -76,7 +78,14 @@ export default function Contacts() {
 
                     <tbody>
                         {contacts.map((c, i) => (
-                            <tr key={i}>
+                            <tr
+                                key={i}
+                                onClick={() => {
+                                    console.log("Clicked:", c);   
+                                    setSelectedContact(c);
+                                }}
+                                className={styles.rowClickable} 
+                            >
                                 <td className={styles.contactCell}>
                                     <div className={styles.avatar}>{c.name[0]}</div>
                                     <span>{c.name}</span>
@@ -94,7 +103,7 @@ export default function Contacts() {
                             </tr>
                         ))}
                     </tbody>
-                </table> 
+                </table>
             </div>
 
         </div>

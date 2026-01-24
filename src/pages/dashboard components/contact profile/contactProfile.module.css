@@ -1,0 +1,131 @@
+/* OVERLAY */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 60, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* CARD */
+.profileCard {
+  width: 620px;
+  background: #fff;
+  border-radius: 22px;
+  padding: 1.4rem;
+  box-shadow: 0 25px 60px rgba(90, 80, 170, 0.35);
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  margin-bottom: 1.2rem;
+}
+
+.avatarBig {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#6b5cff,#9b8cff);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerInfo h2 {
+  font-size: .95rem;
+  color: #1f2a44;
+}
+
+.headerInfo p {
+  font-size: .7rem;
+  color: #7a7fa3;
+}
+
+.closeBtn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  border: none;
+  background: transparent;
+  font-size: .9rem;
+  cursor: pointer;
+}
+
+/* STATUS */
+.status {
+  display: inline-block;
+  margin-top: .3rem;
+  padding: .25rem .6rem;
+  border-radius: 999px;
+  font-size: .6rem;
+  color: #fff;
+}
+
+.active { background: #3bbfa0; }
+.new { background: #6b5cff; }
+.inactive { background: #aaa; }
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* SECTION */
+.section {
+  background: #fafbff;
+  border-radius: 16px;
+  padding: .9rem 1rem;
+}
+
+.section h4 {
+  font-size: .7rem;
+  color: #1f2a44;
+  margin-bottom: .4rem;
+}
+
+.section p {
+  font-size: .7rem;
+  color: #444b6e;
+}
+
+/* TIMELINE */
+.timeline {
+  list-style: none;
+  padding-left: 0;
+  font-size: .7rem;
+}
+
+.timeline li {
+  margin-bottom: .35rem;
+}
+
+/* ACTIONS */
+.actions {
+  display: flex;
+  gap: .4rem;
+}
+
+.actions button {
+  border: none;
+  background: #f2efff;
+  color: #4b3fa7;
+  font-size: .65rem;
+  padding: .4rem .6rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  background: #e6e2ff;
+}
