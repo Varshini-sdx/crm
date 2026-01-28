@@ -1,4 +1,6 @@
 import styles from "./deals.module.css";
+import * as XLSX from "xlsx";
+
 
 const dealsData = [
   {
@@ -28,9 +30,34 @@ const dealsData = [
 ];
 
 export default function Deals({ branch }) {
+  const handleExportDeals = () => {
+    const formattedData = dealsData.map((d) => ({
+      Deal: d.name,
+      Company: d.company,
+      Stage: d.stage,
+      Value: d.value,
+      Owner: d.owner,
+      "Close Date": d.close,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "deals.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+
   return (
     <div className={styles.dealsPage}>
-      
+
       {/* Top Stats */}
       <div className={styles.stats}>
         <div className={styles.statCard}>
@@ -50,6 +77,21 @@ export default function Deals({ branch }) {
           <b>2</b>
         </div>
       </div>
+
+      {/* Export Deals */}
+      <div className={styles.exportSection}>
+        <div className={styles.exportText}>
+          <h3>Export Deals</h3>
+          <p>
+            Download your deals data to analyze updates or share with your team.
+          </p>
+        </div>
+
+        <button className={styles.exportBtn} onClick={handleExportDeals}>
+          Export Deals
+        </button>
+      </div>
+
 
       {/* Deals Table */}
       <div className={styles.tableWrap}>

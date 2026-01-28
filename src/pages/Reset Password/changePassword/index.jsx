@@ -17,6 +17,11 @@ export default function ChangePassword() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (!email || !otp) {
+            setError("Session expired. Please restart reset flow.");
+            return;
+        }
+
         if (password.length < 6) {
             setError("Password must be at least 6 characters.");
             return;
@@ -30,7 +35,7 @@ export default function ChangePassword() {
         setError("");
 
         try {
-            const res = await fetch("http://192.168.1.18:5000/auth/reset-password", {
+            const res = await fetch("http://192.168.1.46:5000/auth/reset-password", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -38,14 +43,14 @@ export default function ChangePassword() {
                 body: JSON.stringify({
                     email,
                     otp,
-                    newPassword: password,
-                    confirmPassword: confirm,
+                    new_password: password,
+                    confirm_password: confirm,
                 }),
             });
 
             const data = await res.json();
 
-            if (!res.ok || !data.success) {
+            if (!res.ok) {
                 throw new Error(data.message || "Failed to update password");
             }
 

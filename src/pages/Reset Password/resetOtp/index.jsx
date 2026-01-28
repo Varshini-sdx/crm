@@ -51,7 +51,7 @@ export default function ResetOtp() {
         setError("");
 
         try {
-            const res = await fetch("http://192.168.1.18:5000/auth/verify-otp", {
+            const res = await fetch("http://192.168.1.46:5000/auth/verify-otp", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -86,7 +86,7 @@ export default function ResetOtp() {
         }
 
         try {
-            const res = await fetch("http://192.168.1.18:5000/auth/forgot-password", {
+            const res = await fetch("http://192.168.1.46:5000/auth/forgot-password", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

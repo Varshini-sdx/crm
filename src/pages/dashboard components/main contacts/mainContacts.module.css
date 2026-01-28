@@ -31,7 +31,7 @@
 
 /* TEXT */
 .statCard span {
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   letter-spacing: 0.4px;
   color: #7a7fa3;
 }
@@ -39,7 +39,7 @@
 .statCard b {
   display: block;
   margin-top: 0.35rem;
-  font-size: 1.35rem;
+  font-size: 1.55rem;
   font-weight: 600;
   color: #1f2a44;
 }
@@ -92,7 +92,7 @@
 .contactsTable th {
   text-align: left;
   padding: .6rem;
-  font-size: .65rem;
+  font-size: .95rem;
   color: #7a7fa3;
   background: linear-gradient(90deg,#f6f7ff,#fff);
 }
@@ -100,6 +100,7 @@
 .contactsTable td {
   padding: .6rem;
   border-bottom: 1px solid #f0f1f6;
+  font-size: 0.85rem;
 }
 
 .contactsTable tr:hover {
@@ -145,4 +146,133 @@
 
 .rowClickable:hover {
   background: #f6f7ff;
+}
+
+
+/* ---------- table header */
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.tableTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2a44;
+}
+
+.tableActions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+
+.importBtn {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #f6f5ff, #ffffff);
+  color: #6b5cff;
+  border: 1px dashed #c9c3ff;
+}
+
+.importBtn:hover {
+  background: #f0efff;
+}
+
+
+.exportBtn {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #6b5cff, #9b8cff);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(107, 92, 255, 0.35);
+}
+
+.exportBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(107, 92, 255, 0.45);
+}
+
+
+/* -------- SEARCH BAR -------- */
+
+/* Right-aligned search bar */
+.searchBarRight {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+
+.searchInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  box-shadow: 0 8px 22px rgba(0,0,0,.08);
+  width: 220px;   /* 👈 IMPORTANT */
+}
+
+.searchInputWrap input {
+  border: none;
+  outline: none;
+  font-size: 0.75rem;
+  width: 100%;
+  color: #1f2a44;
+}
+
+.searchIcon {
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+/* -------- DEDUPE TOGGLE -------- */
+
+.dedupeToggle {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px dashed #c9c3ff;
+  background: #f6f5ff;
+  color: #6b5cff;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.activeToggle {
+  background: linear-gradient(135deg, #6b5cff, #9b8cff);
+  color: #fff;
+  border: none;
+}
+
+/* -------- STATUS + DUPLICATE -------- */
+
+.statusWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.duplicateBadge {
+  font-size: 0.55rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #fff3e8;
+  color: #ff7a3d;
+  border: 1px solid #ffd2b8;
 }
