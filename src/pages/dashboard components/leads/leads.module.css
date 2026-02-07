@@ -2,7 +2,16 @@
 
 
 /* LEADS PAGE */
-.leadsWrap { padding: 1.2rem 0; }
+.leadsWrap { 
+  /*padding: 1.2rem 0; 
+
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; */
+
+  padding: 1.2rem 0;
+  min-width: 0;
+}
 
 /* ----- KPI */
 .leadsKpiGrid {
@@ -337,22 +346,47 @@
 
 /* Wrap */
 .leadsTableWrap {
-  width: 100%;
+  /*width: 100%;
   background: #fff;
   border-radius: 22px;
   padding: .5rem;
   box-shadow: 0 20px 50px rgba(90,80,170,.14);
+
+  overflow-x: visible; */
+
+  width: 100%;
+  max-width: 100%;        /*  prevent layout expansion */
   overflow-x: auto;
+  overflow-y: hidden;
+
+  background: #fff;
+  border-radius: 22px;
+  padding: .5rem;
+  box-shadow: 0 20px 50px rgba(90,80,170,.14);
+
 }
 
 /* Table */
 .leadsTable {
-  width: 100%;
-  min-width: 900px;
+  width: max-content;    /*  content decides width */
+  min-width: 100%; 
+  /*width: 100%; 
+  min-width: 1400px; */
   border-collapse: separate;
   border-spacing: 0;
-  font-size: .78rem;
+  /*font-size: .78rem; */ 
 }
+
+
+.leadsTableWrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.leadsTableWrap::-webkit-scrollbar-thumb {
+  background: #d6d8f0;
+  border-radius: 10px;
+}
+
 
 
 .leadsTable thead {

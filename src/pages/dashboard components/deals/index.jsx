@@ -107,10 +107,19 @@ export default function Deals({ branch }) {
       // ✅ MERGE analytics safely
       const a = analyticsRes.data || {};
 
+      // Helper to map backend reasons to frontend structure
+      const mapReasons = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items.map(item => ({
+          label: item.label || item.reason || "Unknown",
+          value: item.value || item.percentage || 0
+        }));
+      };
+
       setAnalytics({
         winLoss: Array.isArray(a.winLoss) && a.winLoss.length ? a.winLoss : DEFAULT_ANALYTICS.winLoss,
-        winReasons: Array.isArray(a.winReasons) ? a.winReasons : [],
-        lossReasons: Array.isArray(a.lossReasons) ? a.lossReasons : []
+        winReasons: mapReasons(a.winReasons || a.win_reasons),
+        lossReasons: mapReasons(a.lossReasons || a.loss_reasons)
       });
 
 

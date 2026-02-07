@@ -357,7 +357,7 @@ export default function Leads({ branch }) {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="11" style={{ textAlign: "center", padding: "20px", color: "#666" }}>
+                                        <td colSpan="12" style={{ textAlign: "center", padding: "20px", color: "#666" }}>
                                             No leads found matching "{search}"
                                         </td>
                                     </tr>

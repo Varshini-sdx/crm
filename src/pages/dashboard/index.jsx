@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import styles from "./dashboard.module.css";
 import { useNavigate } from "react-router-dom";
 import Main from "../dashboard components/main";
+import Workspace from "../workspace components/workspace";
+
 
 
 
@@ -22,7 +24,9 @@ const navItems = [
     "Contacts",
     "Reports",
     "Calendar",
+    "Workspace",
     "Team",
+    "Inbox",
     "Organization",
     "Campaigns",
     "Settings",
@@ -84,8 +88,12 @@ export default function Dashboard() {
                 return <h2>Reports & Insights</h2>;
             case "Calendar":
                 return <h2>Calendar</h2>;
+            case "Workspace Homepage":
+                return <h2>Workspage management</h2>;
             case "Team":
                 return <h2>Team Management</h2>;
+            case "Inbox":
+                return <h2>Inbox</h2>;
             case "Organization":
                 return <h2>Organization Settings</h2>;
             case "Campaigns":
@@ -161,9 +169,10 @@ export default function Dashboard() {
                         <div className={styles.workspaceSection}>
                             <div className={styles.workspaceHeading}>Workspace</div>
 
-                            <button className={styles.navItem}>Team</button>
+
 
                             {/* States Hover */}
+
                             <div className={styles.statesWrap}>
                                 <div className={styles.navItem}>
                                     States <span className={styles.arrow}>▸</span>
@@ -192,9 +201,54 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
+                            {/*<button className={styles.navItem}>Workspace</button>
+                            <button className={styles.navItem}>Team</button>
                             <button className={styles.navItem}>Roles & Permissions</button>
                             <button className={styles.navItem}>Campaigns</button>
-                            <button className={styles.navItem}>Settings</button>
+                            <button className={styles.navItem}>Settings</button> */}
+
+                            <button
+                                className={`${styles.navItem} ${active === "Workspace" ? styles.active : ""}`}
+                                onClick={() => setActive("Workspace")}
+                            >
+                                Workspace
+                            </button>
+
+                            <button
+                                className={`${styles.navItem} ${active === "Team" ? styles.active : ""}`}
+                                onClick={() => setActive("Team")}
+                            >
+                                Team
+                            </button>
+
+                            <button
+                                className={`${styles.navItem} ${active === "Inbox" ? styles.active : ""}`}
+                                onClick={() => setActive("Inbox")}
+                            >
+                                Inbox
+                            </button>
+
+                            <button
+                                className={`${styles.navItem} ${active === "Organization" ? styles.active : ""}`}
+                                onClick={() => setActive("Organization")}
+                            >
+                                Organization
+                            </button>
+
+                            <button
+                                className={`${styles.navItem} ${active === "Campaigns" ? styles.active : ""}`}
+                                onClick={() => setActive("Campaigns")}
+                            >
+                                Campaigns
+                            </button>
+
+                            <button
+                                className={`${styles.navItem} ${active === "Settings" ? styles.active : ""}`}
+                                onClick={() => setActive("Settings")}
+                            >
+                                Settings
+                            </button>
+
                         </div>
                     </nav>
 
@@ -220,7 +274,14 @@ export default function Dashboard() {
                         <div className={styles.content}>
                             {/*{renderContent()} */}
 
-                            <Main active={active} branch={branch} />
+                            <div className={styles.mainContent}>
+                                {["Dashboard", "Leads", "Deals", "Tasks", "Contacts", "Reports", "Calendar"].includes(active) ? (
+                                    <Main active={active} branch={branch} />
+                                ) : (
+                                    <Workspace active={active} branch={branch} />
+                                )}
+                            </div>
+
                         </div>
                     </div>
                 </main>
