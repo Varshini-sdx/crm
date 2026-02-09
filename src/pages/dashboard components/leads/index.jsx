@@ -9,6 +9,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
+import { Edit2, Trash2 } from "lucide-react";
 
 
 const leadTrend = [
@@ -27,7 +28,7 @@ export default function Leads({ branch }) {
     const fetchLeads = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://192.168.1.19:5000/api/leads", {
+            const res = await axios.get("http://192.168.1.15:5000/api/leads", {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -74,9 +75,30 @@ export default function Leads({ branch }) {
         description: ""
     });
 
+    const getLocation = async () => {
+        try {
+            const res = await fetch("https://ipinfo.io/json");
+            const data = await res.json();
+            return {
+                ip_address: data.ip || null,
+                city: data.city || null,
+                state: data.region || null,
+                country: data.country || null,
+            };
+        } catch (error) {
+            return {
+                ip_address: null,
+                city: null,
+                state: null,
+                country: null,
+            };
+        }
+    };
+
     const handleAddLead = async (e) => {
         e.preventDefault();
         try {
+            const location = await getLocation();
             const token = localStorage.getItem("token");
             const payload = {
                 name: newLead.name,
@@ -88,10 +110,15 @@ export default function Leads({ branch }) {
                 score: newLead.score,
                 sla: newLead.sla,
                 owner: newLead.owner,
-                description: newLead.description
+                description: newLead.description,
+                // auto-attached location
+                ip_address: location.ip_address,
+                city: location.city,
+                state: location.state,
+                country: location.country,
             };
 
-            await axios.post("http://192.168.1.19:5000/api/leads", payload, {
+            await axios.post("http://192.168.1.15:5000/api/leads", payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -127,6 +154,59 @@ export default function Leads({ branch }) {
     const converted = leads.filter(l => l.status === "Converted").length;
     const lost = leads.filter(l => l.status === "Lost").length;
     const newWeek = leads.filter(l => l.isNewThisWeek).length;
+
+    const [editingLead, setEditingLead] = useState(null);
+
+    const handleEditClick = (lead) => {
+        setEditingLead(lead);
+        setNewLead({
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            company: lead.company,
+            source: lead.source,
+            status: lead.status,
+            score: lead.score,
+            sla: lead.sla,
+            owner: lead.owner,
+            description: lead.description
+        });
+        setShowModal(true);
+    };
+
+    const handleDeleteLead = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this lead?")) return;
+        try {
+            const token = localStorage.getItem("token");
+            await axios.delete(`http://192.168.1.15:5000/api/leads/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            fetchLeads();
+        } catch (error) {
+            console.error("Failed to delete lead:", error);
+            alert("Could not delete lead.");
+        }
+    };
+
+    const handleUpdateLead = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem("token");
+            const payload = { ...newLead };
+
+            await axios.put(`http://192.168.1.15:5000/api/leads/${editingLead.id}`, payload, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            setShowModal(false);
+            setEditingLead(null);
+            setNewLead({ name: "", email: "", phone: "", company: "", source: "Website", status: "New", score: "Medium", sla: "On Track", owner: "You", description: "" });
+            fetchLeads();
+        } catch (error) {
+            console.error("Failed to update lead:", error);
+            alert("Could not update lead.");
+        }
+    };
 
     const campaigns = {};
     leads.forEach(l => {
@@ -320,40 +400,59 @@ export default function Leads({ branch }) {
                                     <th>Owner</th>
                                     <th>Created</th>
                                     <th>Description</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {sortedAndFiltered.length > 0 ? (
                                     sortedAndFiltered.map((l, i) => (
-                                    <tr key={i}>
-                                        <td className={styles.muted}>{i + 1}</td>
-                                        <td className={styles.leadName}>{l.name}</td>
-                                        <td className={styles.muted}>{l.email}</td>
-                                        <td className={styles.muted}>{l.phone}</td>
-                                        <td>{l.company}</td>
-                                        <td><span className={styles.sourceChip}>{l.source}</span></td>
-                                        <td>
-                                            <span
-                                                className={`${styles.status} ${styles[l.status.toLowerCase()]}`}>
-                                                {l.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className={`${styles.score} ${styles[l.score.toLowerCase()]}`}>
-                                                {l.score}
-                                            </span>
-                                        </td>
+                                        <tr key={i}>
+                                            <td className={styles.muted}>{i + 1}</td>
+                                            <td className={styles.leadName}>{l.name}</td>
+                                            <td className={styles.muted}>{l.email}</td>
+                                            <td className={styles.muted}>{l.phone}</td>
+                                            <td>{l.company}</td>
+                                            <td><span className={styles.sourceChip}>{l.source}</span></td>
+                                            <td>
+                                                <span
+                                                    className={`${styles.status} ${styles[l.status.toLowerCase()]}`}>
+                                                    {l.status}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className={`${styles.score} ${styles[l.score.toLowerCase()]}`}>
+                                                    {l.score}
+                                                </span>
+                                            </td>
 
-                                        <td>
-                                            <span className={`${styles.sla} ${styles[l.sla.toLowerCase().replace(" ", "-")]}`}>
-                                                {l.sla}
-                                            </span>
-                                        </td>
+                                            <td>
+                                                <span className={`${styles.sla} ${styles[l.sla.toLowerCase().replace(" ", "-")]}`}>
+                                                    {l.sla}
+                                                </span>
+                                            </td>
 
-                                        <td>{l.owner}</td>
-                                        <td className={styles.muted}>{l.createdAt}</td>
-                                        <td className={styles.desc}>{l.description}</td>
-                                    </tr>
+                                            <td>{l.owner}</td>
+                                            <td className={styles.muted}>{l.createdAt}</td>
+                                            <td className={styles.desc}>{l.description}</td>
+                                            <td>
+                                                <div style={{ display: "flex", gap: "10px" }}>
+                                                    <button
+                                                        onClick={() => handleEditClick(l)}
+                                                        style={{ background: "none", border: "none", cursor: "pointer", color: "#6b5cff" }}
+                                                        title="Edit Lead"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteLead(l.id)}
+                                                        style={{ background: "none", border: "none", cursor: "pointer", color: "#ff4d4f" }}
+                                                        title="Delete Lead"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     ))
                                 ) : (
                                     <tr>
@@ -378,13 +477,15 @@ export default function Leads({ branch }) {
                             backgroundColor: "white", padding: "25px", borderRadius: "8px",
                             width: "400px", maxWidth: "90%", boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
                         }}>
-                            <h2 style={{ marginBottom: "20px", fontSize: "1.2rem", color: "#333" }}>Create New Lead</h2>
-                            <form onSubmit={handleAddLead} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <h2 style={{ marginBottom: "20px", fontSize: "1.2rem", color: "#333" }}>
+                                {editingLead ? "Edit Lead" : "Create New Lead"}
+                            </h2>
+                            <form onSubmit={editingLead ? handleUpdateLead : handleAddLead} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                 <input placeholder="Name" required value={newLead.name} onChange={e => setNewLead({ ...newLead, name: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
                                 <input placeholder="Email" type="email" required value={newLead.email} onChange={e => setNewLead({ ...newLead, email: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
                                 <input placeholder="Phone" type="tel" value={newLead.phone} onChange={e => setNewLead({ ...newLead, phone: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
                                 <input placeholder="Company" value={newLead.company} onChange={e => setNewLead({ ...newLead, company: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
-                                
+
                                 <select value={newLead.source} onChange={e => setNewLead({ ...newLead, source: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}>
                                     <option value="Website">Website</option>
                                     <option value="Instagram">Instagram</option>
@@ -403,8 +504,10 @@ export default function Leads({ branch }) {
                                 <textarea placeholder="Description" value={newLead.description} onChange={e => setNewLead({ ...newLead, description: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px", minHeight: "60px" }} />
 
                                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-                                    <button type="button" onClick={() => setShowModal(false)} style={{ padding: "8px 16px", border: "none", background: "#f0f0f0", borderRadius: "4px", cursor: "pointer" }}>Cancel</button>
-                                    <button type="submit" style={{ padding: "8px 16px", border: "none", background: "#6b5cff", color: "white", borderRadius: "4px", cursor: "pointer" }}>Add Lead</button>
+                                    <button type="button" onClick={() => { setShowModal(false); setEditingLead(null); }} style={{ padding: "8px 16px", border: "none", background: "#f0f0f0", borderRadius: "4px", cursor: "pointer" }}>Cancel</button>
+                                    <button type="submit" style={{ padding: "8px 16px", border: "none", background: "#6b5cff", color: "white", borderRadius: "4px", cursor: "pointer" }}>
+                                        {editingLead ? "Save Changes" : "Add Lead"}
+                                    </button>
                                 </div>
                             </form>
                         </div>

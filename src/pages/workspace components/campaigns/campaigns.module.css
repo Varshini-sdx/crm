@@ -1,0 +1,366 @@
+/* ================= ROOT ================= */
+.container {
+    padding: 2rem;
+    background: #f9fafb;
+    min-height: 100vh;
+}
+
+/* ================= HEADER ================= */
+.header {
+    background: linear-gradient(135deg, #fde2e4, #ffedd5);
+    padding: 2rem;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.header p {
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.createBtn {
+    background: white;
+    color: #f97316;
+    border: 1px solid #f97316;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.createBtn:hover {
+    background: #fff7ed;
+}
+
+/* ================= FILTERS ================= */
+.filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.monthYearSelect {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.monthYearSelect:hover {
+    border-color: #7c3aed;
+}
+
+.monthYearSelect:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.filterBtn {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.activeFilter {
+    border-color: #7c3aed;
+    color: #7c3aed;
+}
+
+/* ================= GRID ================= */
+.campaignGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* ================= CARD ================= */
+.campaignCard {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    transition: all 0.25s ease;
+}
+
+.campaignCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* ================= CARD COLORS ================= */
+.blue {
+    border-left: 4px solid #60a5fa;
+}
+
+.green {
+    border-left: 4px solid #34d399;
+}
+
+.pink {
+    border-left: 4px solid #f9a8d4;
+}
+
+/* ================= CARD HEADER ================= */
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.icon {
+    background: #f3f4f6;
+    padding: 8px;
+    border-radius: 10px;
+    color: #374151;
+}
+
+.status {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.running {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.scheduled {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.draft {
+    background: #fef9c3;
+    color: #92400e;
+}
+
+/* ================= TEXT ================= */
+.campaignCard h3 {
+    margin: 1rem 0 0.25rem;
+    font-size: 1.05rem;
+    color: #111827;
+}
+
+.channel {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* ================= FOOTER ================= */
+.cardFooter {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.2rem;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.iconBtn {
+    border: 1px solid #e5e7eb;
+    background: white;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.iconBtn:hover {
+    background: #f9fafb;
+}
+
+/* ================= EMPTY ================= */
+.empty {
+    text-align: center;
+    margin-top: 4rem;
+    color: #6b7280;
+}
+
+/* ================= delete/edit ================= */
+
+.cardActions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.editBtn,
+.deleteBtn {
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.editBtn:hover {
+    background: #f5f3ff;
+    border-color: #c4b5fd;
+    color: #6d28d9;
+}
+
+.deleteBtn {
+    border-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.deleteBtn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+/* ================= MODAL ================= */
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.modal h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
+    color: #111827;
+}
+
+.formGroup {
+    margin-bottom: 1.25rem;
+}
+
+.formGroup label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.formGroup input,
+.formGroup select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.modalActions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.cancelBtn,
+.saveBtn {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancelBtn {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+}
+
+.cancelBtn:hover {
+    background: #f9fafb;
+}
+
+.saveBtn {
+    background: #7c3aed;
+    border: none;
+    color: white;
+}
+
+.saveBtn:hover {
+    background: #6d28d9;
+}
+
+/* ================= SHOW MORE BUTTON ================= */
+
+.showMoreContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.showMoreBtn {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.showMoreBtn:hover {
+    background: #f9fafb;
+    border-color: #7c3aed;
+    color: #7c3aed;
+}
+
+/* ================= FORM ROW ================= */
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}

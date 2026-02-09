@@ -12,6 +12,8 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  flex-shrink: 0;
+  /* Prevent sidebar from shrinking */
 }
 
 .orgBlock h3 {
@@ -31,6 +33,15 @@
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  overflow-y: auto;
+  flex: 1;
+  /* Hide scrollbar for a cleaner look */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
 }
 
 .navItem {
@@ -61,6 +72,8 @@
 .main {
   flex: 1;
   padding: 0.5rem;
+  min-width: 0;
+  /* Important for enabling scroll in children */
 }
 
 .workspace {
@@ -203,7 +216,7 @@
 /* ----- states update ----- */
 .sidebar {
   height: 100vh;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .orgName {

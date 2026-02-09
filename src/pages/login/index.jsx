@@ -19,7 +19,7 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await fetch("http://192.168.1.19:5000/auth/login", {
+            const res = await fetch("http://192.168.1.15:5000/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
