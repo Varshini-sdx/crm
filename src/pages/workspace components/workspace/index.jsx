@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Team } from "../teams";
 import { Inbox } from "../inbox";
 import { Marketing } from "../marketing";
@@ -16,7 +16,7 @@ const initialRules = [
 ];
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect } from "react";
+
 
 const initialWorkflows = [
   { id: 1, name: "New Lead Onboarding", trigger: "Lead Created", steps: 4, status: "Active", theme: "cardBlue" },
@@ -24,19 +24,22 @@ const initialWorkflows = [
   { id: 3, name: "VIP Welcome Sequence", trigger: "Tag Added: VIP", steps: 5, status: "Active", theme: "cardGreen" },
 ];
 
+import axios from "axios";
+
+
+
 const WorkspaceHome = ({ branch }) => {
   // Tabs
-  const [activeWorkflow, setActiveWorkflow] = useState(null); // If null, show list. If set, show builder.
+  const [activeWorkflow, setActiveWorkflow] = useState(null);
 
   // Rules State
-  const [rules, setRules] = useState(() => {
-    const saved = localStorage.getItem("automationRules");
-    return saved ? JSON.parse(saved) : initialRules;
-  });
+  const [rules, setRules] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerStep, setDrawerStep] = useState(1);
   const [newRule, setNewRule] = useState({ name: "", trigger: "", condition: "", action: "" });
   const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Workflow Builder State
   const [workflowNodes, setWorkflowNodes] = useState([
@@ -47,18 +50,59 @@ const WorkspaceHome = ({ branch }) => {
     { id: 5, type: "action", title: "Escalate to Manager", icon: <ArrowRight size={18} /> },
   ]);
 
-  // Persistence
-  useEffect(() => {
-    localStorage.setItem("automationRules", JSON.stringify(rules));
-  }, [rules]);
-
-  // Rule Handlers
-  const toggleRule = (id) => {
-    setRules(rules.map(r => r.id === id ? { ...r, active: !r.active } : r));
+  // Helper for auth headers
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  const deleteRule = (id) => {
-    setRules(rules.filter(r => r.id !== id));
+  // Fetch Rules
+  const fetchRules = useCallback(async () => {
+    try {
+      setLoading(true);
+      const branchId = branch?.id || 1;
+      const response = await axios.get(`http://192.168.1.15:5000/api/automation/rules?branchId=${branchId}`, {
+        headers: getAuthHeader()
+      });
+      setRules(response.data);
+    } catch (error) {
+      console.error("Error fetching rules:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [branch]);
+
+  useEffect(() => {
+    fetchRules();
+  }, [fetchRules]);
+
+  // Rule Handlers
+  const toggleRule = async (rule) => {
+    try {
+      const newStatus = rule.status === "active" ? "paused" : "active";
+      await axios.patch(`http://192.168.1.15:5000/api/automation/rules/${rule.id}/status`, {
+        status: newStatus
+      }, {
+        headers: getAuthHeader()
+      });
+      setRules(rules.map(r => r.id === rule.id ? { ...r, status: newStatus } : r));
+    } catch (error) {
+      console.error("Error toggling rule:", error);
+      alert("Failed to update rule status");
+    }
+  };
+
+  const deleteRule = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this rule?")) return;
+    try {
+      await axios.delete(`http://192.168.1.15:5000/api/automation/rules/${id}`, {
+        headers: getAuthHeader()
+      });
+      setRules(rules.filter(r => r.id !== id));
+    } catch (error) {
+      console.error("Error deleting rule:", error);
+      alert("Failed to delete rule");
+    }
   };
 
   const handleCreateOpen = () => {
@@ -71,9 +115,9 @@ const WorkspaceHome = ({ branch }) => {
   const handleEditOpen = (rule) => {
     setNewRule({
       name: rule.name,
-      trigger: "Lead Created",
-      condition: rule.condition,
-      action: rule.action
+      trigger: rule.trigger_event || "lead_created",
+      condition: rule.conditions?.[0]?.value || "",
+      action: rule.actions?.[0]?.type || ""
     });
     setEditingId(rule.id);
     setDrawerStep(1);
@@ -84,30 +128,50 @@ const WorkspaceHome = ({ branch }) => {
     if (drawerStep < 3) setDrawerStep(drawerStep + 1);
   };
 
-  const handleSaveRule = () => {
-    if (editingId) {
-      setRules(rules.map(r => r.id === editingId ? {
-        ...r,
-        name: newRule.name || r.name,
-        condition: newRule.condition || r.condition,
-        action: newRule.action || r.action,
-      } : r));
-    } else {
-      const rule = {
-        id: Date.now(),
-        active: true,
-        name: newRule.name || "New Automation Rule",
-        condition: newRule.condition || "Condition",
-        action: newRule.action || "Action",
-      };
-      setRules([...rules, rule]);
+  const handleSaveRule = async () => {
+    if (!newRule.name) {
+      alert("Please enter a rule name");
+      return;
     }
-    setIsDrawerOpen(false);
+
+    try {
+      setSubmitting(true);
+      const payload = {
+        name: newRule.name,
+        trigger_event: newRule.trigger || "lead_created",
+        conditions: newRule.condition ? [{ field: "lead_status", operator: "equals", value: newRule.condition }] : [],
+        actions: [{
+          type: newRule.action || "assign_to_branch",
+          template_id: 1, // Placeholder
+          delay_minutes: 0 // Default
+        }],
+        branch_id: branch?.id || 1,
+        organization_id: 1, // Defaulting to 1 as per dev message
+        status: "active"
+      };
+
+      if (editingId) {
+        await axios.put(`http://192.168.1.15:5000/api/automation/rules/${editingId}`, payload, {
+          headers: getAuthHeader()
+        });
+      } else {
+        await axios.post(`http://192.168.1.15:5000/api/automation/rules`, payload, {
+          headers: getAuthHeader()
+        });
+      }
+
+      await fetchRules(); // Refresh list
+      setIsDrawerOpen(false);
+    } catch (error) {
+      console.error("Error saving rule:", error);
+      alert("Failed to save rule");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleOpenBuilder = (workflow) => {
     setActiveWorkflow(workflow);
-    // In a real app, we'd load the specific nodes for this workflow
   };
 
   return (
@@ -151,7 +215,9 @@ const WorkspaceHome = ({ branch }) => {
               <span style={{ textAlign: "right" }}>Actions</span>
             </div>
 
-            {rules.length === 0 ? (
+            {loading ? (
+              <div className={styles.emptyState}>Loading automation rules...</div>
+            ) : rules.length === 0 ? (
               <div className={styles.emptyState}>No automation rules found. Create one to get started.</div>
             ) : (
               rules.map((rule) => (
@@ -159,15 +225,15 @@ const WorkspaceHome = ({ branch }) => {
                   <label className={styles.switch}>
                     <input
                       type="checkbox"
-                      checked={rule.active}
-                      onChange={() => toggleRule(rule.id)}
+                      checked={rule.status === "active"}
+                      onChange={() => toggleRule(rule)}
                     />
                     <span className={styles.slider}></span>
                   </label>
 
                   <div className={styles.ruleName}>{rule.name}</div>
                   <div className={styles.conditionPreview}>
-                    <Filter size={14} /> {rule.condition}
+                    <Filter size={14} /> {rule.conditions?.[0]?.value || rule.condition || "No conditions"}
                   </div>
                   <div className={styles.actions}>
                     <button className={styles.actionBtn} onClick={() => handleEditOpen(rule)}><Edit2 size={16} /></button>
@@ -303,9 +369,9 @@ const WorkspaceHome = ({ branch }) => {
                         onChange={(e) => setNewRule({ ...newRule, trigger: e.target.value })}
                       >
                         <option value="">Select Trigger</option>
-                        <option value="Lead Created">Lead Created</option>
-                        <option value="Lead Updated">Lead Updated</option>
-                        <option value="Status Changed">Status Changed</option>
+                        <option value="lead_created">Lead Created</option>
+                        <option value="lead_updated">Lead Updated</option>
+                        <option value="status_changed">Status Changed</option>
                       </select>
                     </div>
                   </div>
@@ -347,10 +413,10 @@ const WorkspaceHome = ({ branch }) => {
                         onChange={(e) => setNewRule({ ...newRule, action: e.target.value })}
                       >
                         <option value="">Select Action</option>
-                        <option value="Assign to Branch">Assign to Branch</option>
-                        <option value="Assign to Team">Assign to Team</option>
-                        <option value="Send Email">Send Email</option>
-                        <option value="Archive">Archive</option>
+                        <option value="assign_to_branch">Assign to Branch</option>
+                        <option value="assign_to_team">Assign to Team</option>
+                        <option value="send_email">Send Email</option>
+                        <option value="archive">Archive</option>
                       </select>
                     </div>
                   </div>
@@ -368,7 +434,9 @@ const WorkspaceHome = ({ branch }) => {
                 {drawerStep < 3 ? (
                   <button className={styles.primaryBtn} onClick={handleNextStep}>Next Step <ArrowRight size={16} style={{ marginLeft: 8, verticalAlign: "middle" }} /></button>
                 ) : (
-                  <button className={styles.primaryBtn} onClick={handleSaveRule}>Save Rule</button>
+                  <button className={styles.primaryBtn} onClick={handleSaveRule} disabled={submitting}>
+                    {submitting ? "Saving..." : "Save Rule"}
+                  </button>
                 )}
               </div>
             </motion.div>

@@ -22,7 +22,7 @@ export default function Calendar({ branch }) {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://192.168.1.19:5000/api/calendar/events", {
+      const res = await axios.get("http://192.168.1.15:5000/api/calendar/events", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEvents(res.data || []);
@@ -34,7 +34,7 @@ export default function Calendar({ branch }) {
   const fetchReminders = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://192.168.1.19:5000/api/reminders/today", {
+      const res = await axios.get("http://192.168.1.15:5000/api/reminders/today", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReminders(res.data || []);
@@ -52,7 +52,7 @@ export default function Calendar({ branch }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const url = "http://192.168.1.19:5000/api/calendar/events";
+      const url = "http://192.168.1.15:5000/api/calendar/events";
 
       const payload = {
         ...formData,
@@ -86,7 +86,7 @@ export default function Calendar({ branch }) {
   const markReminderSent = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://192.168.1.19:5000/api/reminders/${id}/sent`, {}, {
+      await axios.put(`http://192.168.1.15:5000/api/reminders/${id}/sent`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchReminders();
@@ -166,8 +166,7 @@ export default function Calendar({ branch }) {
         {days.map((day) => (
           <div
             key={day.toISOString()}
-            className={`${styles.day} ${
-              isSameDay(selectedDay, day) ? styles.activeDay : ""
+            className={`${styles.day} ${isSameDay(selectedDay, day) ? styles.activeDay : ""
               }`}
             onClick={() => setSelectedDay(day)}
           >

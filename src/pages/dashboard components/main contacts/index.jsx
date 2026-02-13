@@ -32,20 +32,41 @@ export default function Contacts() {
     const fetchContacts = async () => {
         try {
             const token = localStorage.getItem("token");
-            let url = "http://192.168.1.19:5000/api/contacts";
+            let url = "http://192.168.1.15:5000/api/contacts";
 
             if (showDuplicatesOnly) {
-                url = "http://192.168.1.19:5000/api/contacts/duplicates";
+                url = "http://192.168.1.15:5000/api/contacts/duplicates";
             } else if (searchQuery) {
-                url = `http://192.168.1.19:5000/api/contacts/search?q=${searchQuery}`;
+                url = `http://192.168.1.15:5000/api/contacts/search?q=${searchQuery}`;
             }
 
             const res = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setContacts(Array.isArray(res.data) ? res.data : []);
+
+            let data = Array.isArray(res.data) ? res.data : [];
+
+            // 🌟 DUMMY DATA INJECTION 🌟
+            if (data.length === 0 && !searchQuery && !showDuplicatesOnly) {
+                data = [
+                    { id: 1, name: "Amit Patel", company: "Reliance Ind", email: "amit@reliance.com", phone: "+91 98765 43210", owner: "Varshini", lastContact: "2 hours ago", status: "Active" },
+                    { id: 2, name: "Sneha Reddy", company: "TCS", email: "sneha.r@tcs.com", phone: "+91 87654 32109", owner: "Ravi", lastContact: "Yesterday", status: "New" },
+                    { id: 3, name: "John Smith", company: "Z-Tech Solutions", email: "jsmith@ztech.io", phone: "+1 415 555 0199", owner: "Anu", lastContact: "3 days ago", status: "Active" },
+                    { id: 4, name: "Priya Sharma", company: "Infosys", email: "priya@infosys.com", phone: "+91 76543 21098", owner: "Varshini", lastContact: "1 week ago", status: "Inactive" },
+                    { id: 5, name: "David Miller", company: "Miller Co", email: "david@miller.co", phone: "+44 20 7946 0958", owner: "Ravi", lastContact: "Just now", status: "Active" }
+                ];
+            }
+
+            setContacts(data);
         } catch (err) {
             console.error("Failed to fetch contacts", err);
+            // Fallback for network errors
+            if (!searchQuery && !showDuplicatesOnly) {
+                setContacts([
+                    { id: 1, name: "Amit Patel", company: "Reliance Ind", email: "amit@reliance.com", phone: "+91 98765 43210", owner: "Varshini", lastContact: "2 hours ago", status: "Active" },
+                    { id: 2, name: "Sneha Reddy", company: "TCS", email: "sneha.r@tcs.com", phone: "+91 87654 32109", owner: "Ravi", lastContact: "Yesterday", status: "New" }
+                ]);
+            }
         }
     };
 
@@ -140,14 +161,14 @@ export default function Contacts() {
                 // Update existing
                 const contactId = contacts[editIndex].id;
                 if (contactId) {
-                    await axios.put(`http://192.168.1.19:5000/api/contacts/${contactId}`, newContact, {
+                    await axios.put(`http://192.168.1.15:5000/api/contacts/${contactId}`, newContact, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     fetchContacts();
                 }
             } else {
                 // Create new
-                await axios.post("http://192.168.1.19:5000/api/contacts", {
+                await axios.post("http://192.168.1.15:5000/api/contacts", {
                     ...newContact,
                     owner: newContact.owner || "Unassigned",
                     lastContact: newContact.lastContact || "Just now",
@@ -159,7 +180,7 @@ export default function Contacts() {
         } catch (err) {
             console.error("Error saving contact", err);
         }
-        
+
         setShowCreateModal(false);
         setNewContact({ name: "", company: "", email: "", phone: "", owner: "", lastContact: "", status: "New" });
         setEditIndex(null);
@@ -179,7 +200,7 @@ export default function Contacts() {
             try {
                 const token = localStorage.getItem("token");
                 if (contact.id) {
-                    await axios.delete(`http://192.168.1.19:5000/api/contacts/${contact.id}`, {
+                    await axios.delete(`http://192.168.1.15:5000/api/contacts/${contact.id}`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                 }
@@ -194,7 +215,7 @@ export default function Contacts() {
         if (c.id) {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get(`http://192.168.1.19:5000/api/contacts/${c.id}`, {
+                const res = await axios.get(`http://192.168.1.15:5000/api/contacts/${c.id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setSelectedContact(res.data);
@@ -216,7 +237,7 @@ export default function Contacts() {
                     <b>{contacts.length}</b>
                 </div>
 
-                <div className={`${styles.statCard} ${styles.active}`}>
+                <div className={`${styles.statCard} ${styles.kpiActive}`}>
                     <span>Active</span>
                     <b>{contacts.filter((c) => c.status === "Active").length}</b>
                 </div>
@@ -283,7 +304,7 @@ export default function Contacts() {
 
 
             <div className={styles.searchBarRight}>
-                <button 
+                <button
                     className={styles.createBtn}
                     onClick={() => {
                         setEditIndex(null);
@@ -355,7 +376,7 @@ export default function Contacts() {
                                     <td>
                                         <div className={styles.statusWrap}>
                                             <span
-                                                className={`${styles.status} ${styles[(c.status || "New").toLowerCase()]}`}
+                                                className={`${styles.status} ${styles[(c.status || "New").toLowerCase() + "_pill"]}`}
                                             >
                                                 {c.status || "New"}
                                             </span>
@@ -369,13 +390,13 @@ export default function Contacts() {
                                     </td>
                                     <td>
                                         <div className={styles.actionCell}>
-                                            <button 
-                                                className={styles.iconBtn} 
+                                            <button
+                                                className={styles.iconBtn}
                                                 title="Edit"
                                                 onClick={(e) => handleEditClick(c, e)}
                                             >✏️</button>
-                                            <button 
-                                                className={styles.iconBtn} 
+                                            <button
+                                                className={styles.iconBtn}
                                                 title="Delete"
                                                 onClick={(e) => handleDeleteClick(c, e)}
                                             >🗑️</button>
@@ -401,54 +422,54 @@ export default function Contacts() {
                         <h3 className={styles.modalTitle}>
                             {editIndex !== null ? "Edit Contact" : "Create New Contact"}
                         </h3>
-                        
+
                         <div className={styles.formGroup}>
                             <label>Name</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="e.g. John Doe"
                                 value={newContact.name}
-                                onChange={(e) => setNewContact({...newContact, name: e.target.value})}
+                                onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
                             />
                         </div>
 
                         <div className={styles.formGroup}>
                             <label>Company</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="e.g. Acme Inc"
                                 value={newContact.company}
-                                onChange={(e) => setNewContact({...newContact, company: e.target.value})}
+                                onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
                             />
                         </div>
 
                         <div className={styles.formGroup}>
                             <label>Email</label>
-                            <input 
-                                type="email" 
+                            <input
+                                type="email"
                                 placeholder="john@example.com"
                                 value={newContact.email}
-                                onChange={(e) => setNewContact({...newContact, email: e.target.value})}
+                                onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
                             />
                         </div>
 
                         <div className={styles.formGroup}>
                             <label>Phone</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="+1 234 567 890"
                                 value={newContact.phone}
-                                onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
+                                onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
                             />
                         </div>
 
                         <div className={styles.formGroup}>
                             <label>Owner</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="e.g. Varshini"
                                 value={newContact.owner}
-                                onChange={(e) => setNewContact({...newContact, owner: e.target.value})}
+                                onChange={(e) => setNewContact({ ...newContact, owner: e.target.value })}
                             />
                         </div>
 
@@ -456,7 +477,7 @@ export default function Contacts() {
                             <label>Status</label>
                             <select
                                 value={newContact.status}
-                                onChange={(e) => setNewContact({...newContact, status: e.target.value})}
+                                onChange={(e) => setNewContact({ ...newContact, status: e.target.value })}
                             >
                                 <option value="New">New</option>
                                 <option value="Active">Active</option>
@@ -466,11 +487,11 @@ export default function Contacts() {
 
                         <div className={styles.formGroup}>
                             <label>Last Contact</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="e.g. 2 days ago"
                                 value={newContact.lastContact}
-                                onChange={(e) => setNewContact({...newContact, lastContact: e.target.value})}
+                                onChange={(e) => setNewContact({ ...newContact, lastContact: e.target.value })}
                             />
                         </div>
 

@@ -71,7 +71,7 @@ export default function OrganisationSetup() {
 
         try {
             const response = await axios.post(
-                "http://192.168.1.19:5000/api/organization/setup",
+                "http://192.168.1.15:5000/api/organization/setup",
                 payload,
                 {
                     headers: {

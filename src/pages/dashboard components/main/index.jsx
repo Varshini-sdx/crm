@@ -22,18 +22,47 @@ export default function Main({ active, branch }) {
                 try {
                     const token = localStorage.getItem("token");
                     const headers = { Authorization: `Bearer ${token}` };
-                    const BASE_URL = "http://192.168.1.19:5000";
+                    const BASE_URL = "http://192.168.1.15:5000";
 
                     const [resSummary, resRevenue, resTasks] = await Promise.all([
-                        axios.get(`${BASE_URL}/api/dashboard/summary`, { headers }),
-                        axios.get(`${BASE_URL}/api/dashboard/revenue-growth`, { headers }),
-                        axios.get(`${BASE_URL}/api/reminders/today`, { headers })
+                        axios.get(`${BASE_URL}/api/dashboard/summary`, { headers }).catch(() => ({ data: null })),
+                        axios.get(`${BASE_URL}/api/dashboard/revenue-growth`, { headers }).catch(() => ({ data: null })),
+                        axios.get(`${BASE_URL}/api/reminders/today`, { headers }).catch(() => ({ data: null }))
                     ]);
 
-                    setSummary(resSummary.data || {});
+                    // 🌟 DUMMY DATA INJECTION 🌟
+                    const dashboardSummary = resSummary?.data || {
+                        total_leads: 128,
+                        leads_growth: "+14% from last month",
+                        active_deals: 32,
+                        deals_progress: "12 in closing stage",
+                        revenue: "₹42,50,000",
+                        revenue_period: "Annual Forecast",
+                        tasks_due: 14,
+                        tasks_overdue: "3 overdue"
+                    };
+                    setSummary(dashboardSummary);
 
                     // Process Revenue Data
-                    const backendRevenue = Array.isArray(resRevenue.data) ? resRevenue.data : [];
+                    let backendRevenue = Array.isArray(resRevenue?.data) ? resRevenue.data : [];
+
+                    if (backendRevenue.length === 0) {
+                        backendRevenue = [
+                            { month: "Jan", revenue: 250000 },
+                            { month: "Feb", revenue: 320000 },
+                            { month: "Mar", revenue: 280000 },
+                            { month: "Apr", revenue: 450000 },
+                            { month: "May", revenue: 520000 },
+                            { month: "Jun", revenue: 480000 },
+                            { month: "Jul", revenue: 610000 },
+                            { month: "Aug", revenue: 580000 },
+                            { month: "Sep", revenue: 720000 },
+                            { month: "Oct", revenue: 680000 },
+                            { month: "Nov", revenue: 850000 },
+                            { month: "Dec", revenue: 920000 }
+                        ];
+                    }
+
                     const totalVal = backendRevenue.reduce((acc, item) => acc + (Number(item.revenue) || 0), 0);
 
                     // Map to 12 months
@@ -51,7 +80,17 @@ export default function Main({ active, branch }) {
                         chart: chartBars
                     });
 
-                    setTodayTasks(resTasks.data || []);
+                    let tasks = resTasks?.data || [];
+                    if (tasks.length === 0) {
+                        tasks = [
+                            { type: "Meeting", time: "09:00 AM", title: "Morning Briefing - Sales Team" },
+                            { type: "Meeting", time: "10:00 AM", title: "Strategy Session with Global Tech" },
+                            { type: "Call", time: "11:30 AM", title: "Follow up with Wayne Corp" },
+                            { type: "Task", time: "01:00 PM", title: "Update Pipeline Report" },
+                            { type: "Task", time: "02:00 PM", title: "Review Q1 Financial Report" }
+                        ];
+                    }
+                    setTodayTasks(tasks.slice(0, 5));
                 } catch (error) {
                     console.error("Error fetching dashboard data:", error);
                 }

@@ -21,44 +21,44 @@ export default function Otp() {
     };
 
     const handleVerify = async (e) => {
-    e.preventDefault();
-    setError("");
+        e.preventDefault();
+        setError("");
 
-    if (!otp || otp.length !== 6) {
-        setError("Please enter a valid 6-digit OTP");
-        return;
-    }
-
-    if (!email) {
-        setError("Session expired. Please restart password reset.");
-        return;
-    }
-
-    try {
-        setLoading(true);
-
-        const res = await axios.post(
-            "http://192.168.1.6:5000/auth/verify-otp",
-            {
-                email,
-                otp, // change to code: otp if backend expects that
-            }
-        );
-
-        if (res.data.success === false) {
-            setError(res.data.message || "Invalid or expired OTP");
+        if (!otp || otp.length !== 6) {
+            setError("Please enter a valid 6-digit OTP");
             return;
         }
 
-        localStorage.removeItem("resetEmail");
-        navigate("/login", { replace: true });
+        if (!email) {
+            setError("Session expired. Please restart password reset.");
+            return;
+        }
 
-    } catch (err) {
-        setError(err.response?.data?.message || "Invalid or expired OTP");
-    } finally {
-        setLoading(false);
-    }
-};
+        try {
+            setLoading(true);
+
+            const res = await axios.post(
+                "http://192.168.1.15:5000/auth/verify-otp",
+                {
+                    email,
+                    otp, // change to code: otp if backend expects that
+                }
+            );
+
+            if (res.data.success === false) {
+                setError(res.data.message || "Invalid or expired OTP");
+                return;
+            }
+
+            localStorage.removeItem("resetEmail");
+            navigate("/login", { replace: true });
+
+        } catch (err) {
+            setError(err.response?.data?.message || "Invalid or expired OTP");
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
 
@@ -69,7 +69,7 @@ export default function Otp() {
 
         try {
             await axios.post(
-                "http://192.168.1.6:5000/auth/forgot-password",
+                "http://192.168.1.15:5000/auth/forgot-password",
                 { email }
             );
 

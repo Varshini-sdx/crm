@@ -29,7 +29,7 @@ export default function ResetOtp() {
             setLoading(true);
 
             const res = await axios.post(
-                "http://192.168.1.6:5000/auth/verify-reset-otp",
+                "http://192.168.1.15:5000/auth/verify-reset-otp",
                 { email, otp }
             );
 
@@ -55,7 +55,7 @@ export default function ResetOtp() {
         setInfo("");
 
         try {
-            await axios.post("http://192.168.1.6:5000/auth/forgot-password", {
+            await axios.post("http://192.168.1.15:5000/auth/forgot-password", {
                 email,
             });
 
