@@ -1,6 +1,9 @@
 .layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  /* changed min-height to height */
+  overflow: hidden;
+  /* ensure no body scroll */
   background: #0f1f4a;
 }
 
@@ -13,7 +16,14 @@
   flex-direction: column;
   gap: 2rem;
   flex-shrink: 0;
-  /* Prevent sidebar from shrinking */
+
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 50;
+  overflow: hidden;
 }
 
 .orgBlock h3 {
@@ -81,7 +91,10 @@
   flex: 1;
   padding: 0.5rem;
   min-width: 0;
-  /* Important for enabling scroll in children */
+  margin-left: 260px;
+  overflow: hidden;
+  /* Prevent main from scrolling, keep card fixed */
+  height: 100%;
 }
 
 .workspace {
@@ -92,6 +105,8 @@
   box-shadow: 0 30px 70px rgba(30, 20, 80, 0.15);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  /* Ensure border-radius clips children */
 }
 
 .header {
@@ -118,7 +133,31 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* Important for scrollable flex children */
+  overflow-y: auto;
+  /* Make content scrollable inside the card */
+  padding-right: 0.5rem;
+  /* Add padding for scrollbar spacing */
+
+  /* Scrollbar Styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .mainContent {
@@ -247,10 +286,7 @@
 
 
 /* ----- states update ----- */
-.sidebar {
-  height: 100vh;
-  overflow: hidden;
-}
+/* .sidebar styling merged into main block */
 
 .orgName {
   font-size: 1.1rem;
