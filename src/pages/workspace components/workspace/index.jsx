@@ -8,6 +8,8 @@ import { Profile } from "../profile";
 import { States } from "../states";
 import { SupportTickets } from "../support tickets";
 import KnowledgeBase from "../../dashboard components/knowledge base";
+import AuditLogs from "../audit logs";
+import Billing from "../billing";
 import RBAC from "../rbac";
 import styles from "./workspace.module.css";
 import { Plus, Edit2, Trash2, X, ChevronRight, Zap, Filter, CheckCircle, ArrowRight } from "lucide-react";
@@ -539,6 +541,10 @@ export default function Workspace({ active, branch, setActive }) {
         return <SupportTickets />;
       case "KnowledgeBase":
         return <KnowledgeBase />;
+      case "AuditLogs":
+        return <AuditLogs setActive={setActive} />;
+      case "Billing":
+        return <Billing setActive={setActive} />;
       case "RBAC":
         return <RBAC setActive={setActive} />;
 

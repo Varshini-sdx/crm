@@ -22,7 +22,15 @@ import styles from "./tasks.module.css";
 
 
 export default function Tasks() {
-  const [tasks, setTasks] = useState([]);
+  const DUMMY_TASKS = [
+    { id: "d1", title: "Review Q1 Marketing Plan", related: "Marketing Strategy", priority: "High", due: "Today", owner: "Varshini", done: false },
+    { id: "d2", title: "Send Proposal to Alpha Corp", related: "Deal #1290", priority: "Medium", due: "Tomorrow", owner: "Anu", done: false },
+    { id: "d3", title: "Schedule follow-up with Beta Tech", related: "Lead #892", priority: "High", due: "Today", owner: "Rohan", done: false },
+    { id: "d4", title: "Prepare Monthly Sales Report", related: "Internal", priority: "Low", due: "Next Week", owner: "Admin", done: true },
+    { id: "d5", title: "Finalize Vendor Contract", related: "Vendor Mgmt", priority: "Medium", due: "Today", owner: "Varshini", done: true },
+  ];
+
+  const [tasks, setTasks] = useState(DUMMY_TASKS);
   const [loading, setLoading] = useState(false);
 
   const [filter, setFilter] = useState("All");
@@ -54,14 +62,21 @@ export default function Tasks() {
           ...t,
           id,
           done: t.status === 'completed' || t.status === 'done' || !!t.done,
+          title: t.title || "Untitled Task",
           priority: t.priority || 'Medium',
-          due: t.due_date || t.due || 'No date',
-          related: t.related_to || t.related || ""
+          due: t.due_date ? new Date(t.due_date).toLocaleDateString() : (t.due || 'No date'),
+          owner: t.owner || t.assigned_to || t.assigned_user_id || "Unassigned",
+          related: t.related || t.related_to || ""
         };
       });
-      setTasks(mapped);
+
+      // Show backend data if available, else retain dummy data
+      if (mapped && mapped.length > 0) {
+        setTasks(mapped);
+      }
     } catch (err) {
       console.error("Failed to fetch tasks", err);
+      // Retain dummy tasks on error
     } finally {
       setLoading(false);
     }
@@ -92,9 +107,12 @@ export default function Tasks() {
       const token = localStorage.getItem("token");
       const res = await axios.post("http://192.168.1.61:5000/api/tasks", {
         title: newTask.title,
+        description: "",
         priority: newTask.priority,
         due_date: newTask.due || "today",
-        related_to: newTask.related
+        related: newTask.related,
+        assigned_to: 2, // Backend requires an integer
+        lead_id: 2 // Backend requires an integer
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });

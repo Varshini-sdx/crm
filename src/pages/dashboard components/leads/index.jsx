@@ -19,15 +19,15 @@ const leadTrend = [
     { week: "W4", all: 42, qualified: 34 },
     { week: "W5", all: 55, qualified: 40 },
     { week: "W6", all: 68, qualified: 52 },
-]; ''
+];
 
 export default function Leads({ branch }) {
 
     const DUMMY_LEADS = [
-        { id: 101, name: "Anita Kumar", email: "anita@example.com", phone: "+91 91234 56789", company: "Green Energy Corp", source: "Facebook", status: "Hot", score: "High", sla: "On Track", owner: "Varshini", createdAt: "2026-02-23" },
-        { id: 102, name: "Vikram Singh", email: "vikram@singh.in", phone: "+91 82345 67890", company: "Singh & Sons", source: "Direct", status: "New", score: "Medium", sla: "Delayed", owner: "Ravi", createdAt: "2026-02-22" },
-        { id: 103, name: "Sarah Jones", email: "sarahj@tech.com", phone: "+1 555 0102", company: "Tech Flow", source: "Google", status: "Converted", score: "High", sla: "On Track", owner: "Anu", createdAt: "2026-02-20" },
-        { id: 104, name: "Rajesh Iyer", email: "riyer@tcs.com", phone: "+91 73456 78901", company: "TCS", source: "LinkedIn", status: "Lost", score: "Low", sla: "N/A", owner: "Varshini", createdAt: "2026-02-15" },
+        { id: 101, name: "Anita Kumar", email: "anita@example.com", phone: "+91 91234 56789", source: "Facebook", status: "Hot", score: "High", sla: "On Track", owner: "Varshini", createdAt: "2026-02-23" },
+        { id: 102, name: "Vikram Singh", email: "vikram@singh.in", phone: "+91 82345 67890", source: "Direct", status: "New", score: "Medium", sla: "Delayed", owner: "Ravi", createdAt: "2026-02-22" },
+        { id: 103, name: "Sarah Jones", email: "sarahj@tech.com", phone: "+1 555 0102", source: "Google", status: "Converted", score: "High", sla: "On Track", owner: "Anu", createdAt: "2026-02-20" },
+        { id: 104, name: "Rajesh Iyer", email: "riyer@tcs.com", phone: "+91 73456 78901", source: "LinkedIn", status: "Lost", score: "Low", sla: "N/A", owner: "Varshini", createdAt: "2026-02-15" },
     ];
 
     const [leads, setLeads] = useState(DUMMY_LEADS);
@@ -40,28 +40,32 @@ export default function Leads({ branch }) {
     const fetchLeads = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://192.168.1.61:5000/api/leads", {
+            console.log("Fetching leads from backend...");
+            const res = await axios.get("http://192.168.1.61:5000/api/leads/all", {
                 headers: { Authorization: `Bearer ${token}` },
             });
+
+            console.log("Raw Backend Leads Response:", res.data);
 
             // Handle both array and object responses (e.g. { leads: [...] })
             let data = Array.isArray(res.data)
                 ? res.data
                 : (res.data && Array.isArray(res.data.leads) ? res.data.leads : (res.data?.data || []));
 
+            console.log("Extracted Leads Data Array:", data);
+
             // Map backend data to frontend structure
             const mappedLeads = data.map(lead => ({
-                id: lead.id,
+                id: lead.id || lead._id || lead.lead_id || lead.uuid,
                 name: lead.name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'No Name',
                 email: lead.email || '',
                 phone: lead.phone || '',
-                company: lead.company || '',
-                source: lead.source || lead.lead_source || 'Unknown',
+                source: (lead.source || lead.lead_source || 'Unknown').replace(/^./, c => c.toUpperCase()),
                 status: lead.status || 'New',
-                score: lead.score || 'Medium',
-                sla: lead.sla || 'On Track',
-                owner: lead.owner || 'Unassigned',
-                createdAt: lead.created_at || 'N/A',
+                score: (lead.score || 'Medium').replace(/^./, c => c.toUpperCase()),
+                sla: (lead.sla || 'On Track').replace(/^./, c => c.toUpperCase()),
+                owner: lead.owner || lead.assigned_user_id || 'Unassigned',
+                createdAt: lead.created_at ? new Date(lead.created_at).toLocaleDateString() : 'N/A',
                 description: lead.description || '',
                 city: lead.city || 'N/A',
                 state: lead.state || 'N/A',
@@ -69,7 +73,10 @@ export default function Leads({ branch }) {
                 isNewThisWeek: lead.isNewThisWeek || false
             }));
 
+            console.log("Successfully Mapped Leads:", mappedLeads);
+
             if (mappedLeads.length === 0) {
+                console.warn("Backend returned 0 leads. Falling back to DUMMY_LEADS.");
                 setLeads(DUMMY_LEADS);
             } else {
                 setLeads(mappedLeads);
@@ -82,7 +89,7 @@ export default function Leads({ branch }) {
 
     useEffect(() => {
         fetchLeads();
-    }, []);
+    }, [branch]);
 
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
@@ -93,7 +100,6 @@ export default function Leads({ branch }) {
         name: "",
         email: "",
         phone: "",
-        company: "",
         source: "Website",
         status: "New",
         score: "Medium",
@@ -132,7 +138,6 @@ export default function Leads({ branch }) {
                 name: newLead.name,
                 email: newLead.email,
                 phone: newLead.phone,
-                company: newLead.company,
                 source: newLead.source,
                 status: newLead.status,
                 score: newLead.score,
@@ -151,7 +156,7 @@ export default function Leads({ branch }) {
             });
 
             setShowModal(false);
-            setNewLead({ name: "", email: "", phone: "", company: "", source: "Website", status: "New", score: "Medium", sla: "On Track", owner: "You", description: "" });
+            setNewLead({ name: "", email: "", phone: "", source: "Website", status: "New", score: "Medium", sla: "On Track", owner: "You", description: "" });
             fetchLeads(); // Refresh list after adding
         } catch (error) {
             console.error("Failed to create lead:", error);
@@ -160,12 +165,11 @@ export default function Leads({ branch }) {
     };
 
     const filtered = leads.filter(l =>
-        (statusFilter === "All" || l.status === statusFilter) &&
-        (sourceFilter === "All" || l.source === sourceFilter) &&
+        (statusFilter === "All" || l.status?.toLowerCase() === statusFilter.toLowerCase()) &&
+        (sourceFilter === "All" || l.source?.toLowerCase() === sourceFilter.toLowerCase()) &&
         (
             l.name?.toLowerCase().includes(search.toLowerCase()) ||
-            l.email?.toLowerCase().includes(search.toLowerCase()) ||
-            l.company?.toLowerCase().includes(search.toLowerCase())
+            l.email?.toLowerCase().includes(search.toLowerCase())
         )
     );
 
@@ -191,7 +195,6 @@ export default function Leads({ branch }) {
             name: lead.name,
             email: lead.email,
             phone: lead.phone,
-            company: lead.company,
             source: lead.source,
             status: lead.status,
             score: lead.score,
@@ -228,7 +231,7 @@ export default function Leads({ branch }) {
 
             setShowModal(false);
             setEditingLead(null);
-            setNewLead({ name: "", email: "", phone: "", company: "", source: "Website", status: "New", score: "Medium", sla: "On Track", owner: "You", description: "" });
+            setNewLead({ name: "", email: "", phone: "", source: "Website", status: "New", score: "Medium", sla: "On Track", owner: "You", description: "" });
             fetchLeads();
         } catch (error) {
             console.error("Failed to update lead:", error);
@@ -372,7 +375,7 @@ export default function Leads({ branch }) {
                             <tbody>
                                 {sortedAndFiltered.length > 0 ? (
                                     sortedAndFiltered.map((l, i) => (
-                                        <tr key={i}>
+                                        <tr key={l.id}>
                                             <td className={styles.muted}>{i + 1}</td>
                                             <td className={styles.leadName}>{l.name}</td>
                                             <td className={styles.muted}>{l.email}</td>
@@ -380,18 +383,18 @@ export default function Leads({ branch }) {
                                             <td><span className={styles.sourceChip}>{l.source}</span></td>
                                             <td>
                                                 <span
-                                                    className={`${styles.status} ${styles[l.status.toLowerCase()]}`}>
+                                                    className={`${styles.status} ${styles[l.status?.toLowerCase() || "new"]}`}>
                                                     {l.status}
                                                 </span>
                                             </td>
                                             <td>
-                                                <span className={`${styles.score} ${styles[l.score.toLowerCase()]}`}>
+                                                <span className={`${styles.score} ${styles[l.score?.toLowerCase() || "medium"]}`}>
                                                     {l.score}
                                                 </span>
                                             </td>
 
                                             <td>
-                                                <span className={`${styles.sla} ${styles[l.sla.toLowerCase().replace(" ", "-")]}`}>
+                                                <span className={`${styles.sla} ${styles[l.sla?.toLowerCase()?.replace(" ", "-") || "on-track"]}`}>
                                                     {l.sla}
                                                 </span>
                                             </td>
@@ -465,7 +468,6 @@ export default function Leads({ branch }) {
                                 <input placeholder="Name" required value={newLead.name} onChange={e => setNewLead({ ...newLead, name: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
                                 <input placeholder="Email" type="email" required value={newLead.email} onChange={e => setNewLead({ ...newLead, email: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
                                 <input placeholder="Phone" type="tel" value={newLead.phone} onChange={e => setNewLead({ ...newLead, phone: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
-                                <input placeholder="Company" value={newLead.company} onChange={e => setNewLead({ ...newLead, company: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }} />
 
                                 <select value={newLead.source} onChange={e => setNewLead({ ...newLead, source: e.target.value })} style={{ padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}>
                                     <option value="Website">Website</option>

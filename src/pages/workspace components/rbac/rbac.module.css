@@ -450,7 +450,7 @@
     display: grid;
     grid-template-columns: 340px 1fr;
     gap: 24px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .editorLeft {
@@ -461,6 +461,20 @@
 
 .editorRight {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.editorRight .card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.assignUsersCard {
+    /* Removed flex: 1 so it doesn't stretch and dictates left side's natural height */
+    display: flex;
+    flex-direction: column;
 }
 
 /* CARD */
@@ -648,6 +662,8 @@
 /* PERMISSIONS MATRIX */
 .matrixWrapper {
     overflow-x: auto;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .permTable {

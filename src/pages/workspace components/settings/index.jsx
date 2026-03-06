@@ -10,13 +10,23 @@ import {
     ArrowUpRight,
     X,
     Save,
-    Check
+    Check,
+    Activity
 } from 'lucide-react';
 
 export const Settings = ({ branch, setActive }) => {
     const [selectedCategory, setSelectedCategory] = useState(null);
 
     const categories = [
+        {
+            id: 'auditLogs',
+            title: 'Audit Logs',
+            desc: 'Track user actions, changes, and security events across the workspace.',
+            icon: <Activity size={24} />,
+            status: 'Monitoring',
+            type: 'auditLogs',
+            navigateTo: 'AuditLogs'
+        },
         {
             id: 'workspace',
             title: 'Workspace Configuration',
@@ -64,7 +74,8 @@ export const Settings = ({ branch, setActive }) => {
             desc: 'Manage your plan, payment methods, and view transaction history.',
             icon: <CreditCard size={24} />,
             status: 'Pro Plan',
-            type: 'billing'
+            type: 'billing',
+            navigateTo: 'Billing'
         }
     ];
 

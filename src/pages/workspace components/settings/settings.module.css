@@ -97,6 +97,15 @@
 }
 
 /* Pastel Variants */
+.auditLogs {
+    background: #fdf4ff;
+    color: #c026d3;
+}
+
+.auditLogsAction {
+    color: #c026d3;
+}
+
 .workspace {
     background: #f0f7ff;
     color: #0369a1;

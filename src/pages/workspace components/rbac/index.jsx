@@ -217,40 +217,33 @@ export default function RBAC({ setActive }) {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>Role Name <span className={styles.required}>*</span></label>
-                                <input
+                                <select
                                     className={styles.input}
-                                    placeholder="e.g. Sales Manager"
                                     value={editingRole.name}
-                                    onChange={e => setEditingRole(prev => ({ ...prev, name: e.target.value }))}
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Description</label>
-                                <textarea
-                                    className={styles.textarea}
-                                    placeholder="What can this role do?"
-                                    rows={3}
-                                    value={editingRole.description}
-                                    onChange={e => setEditingRole(prev => ({ ...prev, description: e.target.value }))}
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Role Color</label>
-                                <div className={styles.colorPicker}>
-                                    {roleColors.map(c => (
-                                        <button
-                                            key={c}
-                                            className={`${styles.colorDot} ${editingRole.color === c ? styles.colorSelected : ""}`}
-                                            style={{ background: c }}
-                                            onClick={() => setEditingRole(prev => ({ ...prev, color: c }))}
-                                        />
+                                    onChange={e => {
+                                        const selectedRole = DEFAULT_ROLES.find(r => r.name === e.target.value);
+                                        if (selectedRole) {
+                                            setEditingRole(prev => ({
+                                                ...prev,
+                                                name: selectedRole.name,
+                                                description: selectedRole.description,
+                                                color: selectedRole.color
+                                            }));
+                                        } else {
+                                            setEditingRole(prev => ({ ...prev, name: e.target.value }));
+                                        }
+                                    }}
+                                >
+                                    <option value="" disabled>Select a role</option>
+                                    {DEFAULT_ROLES.map(r => (
+                                        <option key={r.id} value={r.name}>{r.name}</option>
                                     ))}
-                                </div>
+                                </select>
                             </div>
                         </div>
 
                         {/* Assign Users */}
-                        <div className={styles.card}>
+                        <div className={`${styles.card} ${styles.assignUsersCard}`}>
                             <div className={styles.cardHeader}>
                                 <Users size={18} />
                                 <h3>Assign Team Members</h3>
