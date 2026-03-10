@@ -805,6 +805,438 @@
   font-size: 0.85rem;
   color: #64748b;
   line-height: 1.5;
+  flex-shrink: 0;
+}
+
+/* Deal Performance & Velocity Redesign */
+.reportSection {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+  transition: transform 0.2s ease;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.sectionHeading h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.sectionIcon {
+  color: #6366f1;
+}
+
+/* Velocity Flow */
+.velocityFlow {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.stageFlowCard {
+  flex: 1;
+  min-width: 200px;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  border-left: 4px solid var(--accent-color);
+}
+
+.stageIndex {
+  width: 24px;
+  height: 24px;
+  background: var(--accent-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.stageName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.daysValueGroup {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.daysCount {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.daysLabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.flowArrow {
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f1f5f9;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  z-index: 1;
+}
+
+/* Grids */
+.twoColumnGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Industry Cards */
+.industryList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.industryCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #eff6ff;
+}
+
+.industryName {
+  font-weight: 600;
+  color: #475569;
+}
+
+.cycleValue {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Loss Analysis */
+.lossList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lossReasonCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lossHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+
+.lossLabel {
+  color: #475569;
+  font-weight: 600;
+}
+
+.lossCount {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.lossBarTrack {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lossBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #fca5a5, #ef4444);
+  border-radius: 4px;
+}
+
+/* Competitors */
+.competitorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.compCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.compCard:hover {
+  transform: translateY(-2px);
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.compBadge {
+  width: 40px;
+  height: 40px;
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px dashed #fda4af;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.compInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compName {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.compLostCount {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* Revenue Forecast Styles */
+.contentSubtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 4px 0 24px 0;
+}
+
+.forecastGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.forecastCard {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease;
+}
+
+.forecastCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.cardIcon {
+  color: #6366f1;
+  opacity: 0.8;
+}
+
+.forecastBarContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.forecastBarItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barLabelGroup {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.barMonth {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.barValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.barTrack {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.probabilityGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.probCard {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.probCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--accent-color);
+}
+
+.probHeader {
+  display: flex;
+  flex-direction: column;
+}
+
+.probLevel {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent-color);
+}
+
+.probLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.probValueGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.probValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.probSub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.probIndicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.probDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-color);
+}
+
+.probLine {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-color), transparent);
+  border-radius: 1px;
+}
+
+/* Monthly Revenue Breakdown Styles */
+.monthlyRevenueSection {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  margin-top: 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sectionHeader h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.sectionIcon {
+  color: #3b82f6;
+}
+
+.forecastBadge {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
 }
 
 .tabLink {

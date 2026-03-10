@@ -26,7 +26,12 @@ import {
   Calendar,
   ChevronDown,
   Clock,
-  X
+  X,
+  BarChart3,
+  XCircle,
+  History,
+  AlertTriangle,
+  Trophy
 } from "lucide-react";
 import styles from "./reports.module.css";
 
@@ -40,7 +45,9 @@ export default function Reports() {
   const [sharePage, setSharePage] = useState("all");
 
   // --- INITIAL VISIBLE TABS ---
-  const DEFAULT_TABS = ["summary", "leads", "sales", "pipeline", "reps", "customers", "health"];
+  // --- INITIAL VISIBLE TABS ---
+  // --- INITIAL VISIBLE TABS ---
+  const DEFAULT_TABS = ["summary", "leads", "sales", "velocity", "reps", "customers", "health", "forecast"];
   const [visibleTabs, setVisibleTabs] = useState(() => {
     const saved = localStorage.getItem("crm_reports_visible_tabs");
     return saved ? JSON.parse(saved) : DEFAULT_TABS;
@@ -78,26 +85,42 @@ export default function Reports() {
     { item: "Avg Deal Size", value: "₹1,32,000", change: "+5%" },
   ];
 
-  const DUMMY_PIPELINE = [
-    { stage: "New Lead", deals: 45, value: "₹12,40,000", closedIn: "12 days" },
-    { stage: "Qualified", deals: 32, value: "₹25,00,000", closedIn: "18 days" },
-    { stage: "Proposal", deals: 18, value: "₹45,20,000", closedIn: "24 days" },
-    { stage: "Stagnant", deals: 8, value: "₹5,00,000", closedIn: "45+ days" },
-  ];
-
   const [summaryData, setSummaryData] = useState(DUMMY_SUMMARY);
   const [leadReport, setLeadReport] = useState(DUMMY_LEADS);
   const [salesReport, setSalesReport] = useState(DUMMY_SALES);
-  const [pipelineStats, setPipelineStats] = useState(DUMMY_PIPELINE);
+
+  const DUMMY_VELOCITY = {
+    stages: [
+      { stage: "Qualification", days: 5, color: "#0ea5e9" }, // Sky Blue
+      { stage: "Proposal", days: 10, color: "#8b5cf6" },    // Violet
+      { stage: "Negotiation", days: 15, color: "#f59e0b" },   // Orange
+    ],
+    industries: [
+      { industry: "Pharma", cycle: "60 days", color: "#f59e0b" },
+      { industry: "IT", cycle: "30 days", color: "#10b981" },
+    ]
+  };
+
+  const DUMMY_LOST_DEALS = {
+    reasons: [
+      { reason: "Price too high", count: 12, percentage: "60%" },
+      { reason: "Competitor won", count: 8, percentage: "40%" },
+    ],
+    competitors: [
+      { competitor: "Zoho", lost: 5 },
+      { competitor: "Salesforce", lost: 3 },
+    ]
+  };
 
   const tabs = [
     { id: "summary", label: "Executive Summary", icon: <Zap size={16} /> },
     { id: "leads", label: "Lead Report", icon: <Globe size={16} /> },
     { id: "sales", label: "Sales Report", icon: <Target size={16} /> },
-    { id: "pipeline", label: "Pipeline Report", icon: <TrendingUp size={16} /> },
+    { id: "velocity", label: "Deal Performance", icon: <History size={16} /> },
     { id: "reps", label: "Sales Reps", icon: <UserCircle size={16} /> },
     { id: "customers", label: "Customer Stats", icon: <Users size={16} /> },
     { id: "health", label: "Customer Health", icon: <Heart size={16} /> },
+    { id: "forecast", label: "Revenue Forecast", icon: <BarChart3 size={16} /> },
   ];
 
   const DUMMY_CUSTOMER_HEALTH = [
@@ -174,6 +197,25 @@ export default function Reports() {
     fetchData();
   }, []);
 
+  const DUMMY_FORECAST = {
+    quarterly: [
+      { month: "April", forecast: "₹40 L", color: "#8b94fe" },
+      { month: "May", forecast: "₹55 L", color: "#6366f1" },
+      { month: "June", forecast: "₹70 L", color: "#4f46e5" },
+    ],
+    probability: [
+      { level: "90%", value: "₹20 L", color: "#10b981" },
+      { level: "50%", value: "₹60 L", color: "#f59e0b" },
+    ],
+    monthly: [
+      { month: "April", value: "₹40 L", deals: 12, growth: "+15%", status: "On Track" },
+      { month: "May", value: "₹55 L", deals: 18, growth: "+20%", status: "Overachieving" },
+      { month: "June", value: "₹70 L", deals: 24, growth: "+25%", status: "On Track" },
+      { month: "July", value: "₹85 L", deals: 30, growth: "+10%", status: "High Potential" },
+      { month: "August", value: "₹95 L", deals: 32, growth: "+8%", status: "Bullish" },
+    ]
+  };
+
 
   // --- EXPORT LOGIC ---
   const toggleExportSelection = (id) => {
@@ -241,11 +283,26 @@ export default function Reports() {
       contentHTML += `</tbody></table>`;
     }
 
-    // 4. Pipeline Report
-    if (selectedExports.includes("pipeline")) {
-      contentHTML += `<h2>Pipeline Overview</h2><table><thead><tr><th>Stage</th><th>Deals</th><th>Value</th><th>Avg Time</th></tr></thead><tbody>`;
-      pipelineStats.forEach(r => {
-        contentHTML += `<tr><td>${r.stage}</td><td>${r.deals}</td><td>${r.value}</td><td>${r.closedIn}</td></tr>`;
+    // 4. Deal Velocity
+    if (selectedExports.includes("velocity")) {
+      contentHTML += `<h2>Deal Velocity Report</h2><table><thead><tr><th>Stage/Industry</th><th>Avg Time</th></tr></thead><tbody>`;
+      DUMMY_VELOCITY.stages.forEach(r => {
+        contentHTML += `<tr><td>${r.stage}</td><td>${r.days} days</td></tr>`;
+      });
+      DUMMY_VELOCITY.industries.forEach(r => {
+        contentHTML += `<tr><td>${r.industry}</td><td>${r.cycle}</td></tr>`;
+      });
+      contentHTML += `</tbody></table>`;
+    }
+
+    // 5. Lost Deals Analysis
+    if (selectedExports.includes("lost_deals")) {
+      contentHTML += `<h2>Lost Deals Analysis</h2><table><thead><tr><th>Reason/Competitor</th><th>Count/Lost</th></tr></thead><tbody>`;
+      DUMMY_LOST_DEALS.reasons.forEach(r => {
+        contentHTML += `<tr><td>${r.reason}</td><td>${r.count}</td></tr>`;
+      });
+      DUMMY_LOST_DEALS.competitors.forEach(r => {
+        contentHTML += `<tr><td>${r.competitor}</td><td>${r.lost}</td></tr>`;
       });
       contentHTML += `</tbody></table>`;
     }
@@ -550,27 +607,99 @@ export default function Reports() {
             </div>
           )}
 
-          {activeTab === "pipeline" && (
+          {activeTab === "velocity" && (
             <div className={styles.contentBlock}>
               <div className={styles.contentHeader}>
-                <h3 className={styles.contentTitle}>Pipeline Overview</h3>
+                <h3 className={styles.contentTitle}>Deal Performance & Velocity</h3>
+                <p className={styles.contentSubtitle}>Comprehensive analysis of sales cycle speed and lost deal insights.</p>
               </div>
-              <div className={styles.tableWrapper}>
-                <table className={styles.reportTable}>
-                  <thead>
-                    <tr><th>Stage</th><th>Deals</th><th>Value</th><th>Avg Time</th></tr>
-                  </thead>
-                  <tbody>
-                    {pipelineStats.map((row, i) => (
-                      <tr key={i}>
-                        <td className={styles.bold}>{row.stage}</td>
-                        <td>{row.deals}</td>
-                        <td className={styles.accentText}>{row.value}</td>
-                        <td>{row.closedIn}</td>
-                      </tr>
+
+              {/* SECTION: STAGE VELOCITY */}
+              <div className={styles.reportSection}>
+                <div className={styles.sectionHeading}>
+                  <TrendingUp size={18} className={styles.sectionIcon} />
+                  <h4>Stage-wise Deal Velocity</h4>
+                </div>
+                <div className={styles.velocityFlow}>
+                  {DUMMY_VELOCITY.stages.map((v, i) => (
+                    <div key={i} className={styles.stageFlowCard} style={{ '--accent-color': v.color }}>
+                      <div className={styles.stageIndex}>{i + 1}</div>
+                      <div className={styles.stageInfo}>
+                        <span className={styles.stageName}>{v.stage}</span>
+                        <div className={styles.daysValueGroup}>
+                          <span className={styles.daysCount}>{v.days}</span>
+                          <span className={styles.daysLabel}>Avg Days</span>
+                        </div>
+                      </div>
+                      {i < DUMMY_VELOCITY.stages.length - 1 && (
+                        <div className={styles.flowArrow}>
+                          <ChevronRight size={14} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.twoColumnGrid}>
+                {/* SECTION: INDUSTRY VELOCITY */}
+                <div className={styles.reportSection}>
+                  <div className={styles.sectionHeading}>
+                    <Globe size={18} className={styles.sectionIcon} />
+                    <h4>Sales Cycle by Industry</h4>
+                  </div>
+                  <div className={styles.industryList}>
+                    {DUMMY_VELOCITY.industries.map((v, i) => (
+                      <div key={i} className={styles.industryCard}>
+                        <span className={styles.industryName}>{v.industry}</span>
+                        <span className={styles.cycleValue} style={{ color: v.color }}>{v.cycle}</span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+
+                {/* SECTION: LOST DEAL REASONS */}
+                <div className={styles.reportSection}>
+                  <div className={styles.sectionHeading}>
+                    <AlertTriangle size={18} className={styles.sectionIcon} />
+                    <h4>Primary Reasons for Loss</h4>
+                  </div>
+                  <div className={styles.lossList}>
+                    {DUMMY_LOST_DEALS.reasons.map((v, i) => (
+                      <div key={i} className={styles.lossReasonCard}>
+                        <div className={styles.lossHeader}>
+                          <span className={styles.lossLabel}>{v.reason}</span>
+                          <span className={styles.lossCount}>{v.count} deals</span>
+                        </div>
+                        <div className={styles.lossBarTrack}>
+                          <div
+                            className={styles.lossBarFill}
+                            style={{ width: v.percentage }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION: COMPETITOR ANALYSIS */}
+              <div className={styles.reportSection}>
+                <div className={styles.sectionHeading}>
+                  <Trophy size={18} className={styles.sectionIcon} />
+                  <h4>Lost to Competitors</h4>
+                </div>
+                <div className={styles.competitorGrid}>
+                  {DUMMY_LOST_DEALS.competitors.map((v, i) => (
+                    <div key={i} className={styles.compCard}>
+                      <div className={styles.compBadge}>VS</div>
+                      <div className={styles.compInfo}>
+                        <span className={styles.compName}>{v.competitor}</span>
+                        <span className={styles.compLostCount}>{v.lost} Deals Won by them</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -763,8 +892,109 @@ export default function Reports() {
               </div>
             </div>
           )}
+
+          {activeTab === "forecast" && (
+            <div className={styles.contentBlock}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>Revenue Forecast</h3>
+                <p className={styles.contentSubtitle}>Predictive analytics for future revenue streams.</p>
+              </div>
+
+              <div className={styles.forecastGrid}>
+                {/* Quarterly Forecast */}
+                <div className={styles.forecastCard}>
+                  <div className={styles.cardHeader}>
+                    <h4>Expected Revenue Next Quarter</h4>
+                    <Calendar size={18} className={styles.cardIcon} />
+                  </div>
+                  <div className={styles.forecastBarContainer}>
+                    {DUMMY_FORECAST.quarterly.map((item, i) => (
+                      <div key={i} className={styles.forecastBarItem}>
+                        <div className={styles.barLabelGroup}>
+                          <span className={styles.barMonth}>{item.month}</span>
+                          <span className={styles.barValue}>{item.forecast}</span>
+                        </div>
+                        <div className={styles.barTrack}>
+                          <div
+                            className={styles.barFill}
+                            style={{
+                              width: (parseInt(item.forecast.replace('₹', '').replace(' L', '')) / 70 * 100) + '%',
+                              backgroundColor: item.color
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Probability Forecast */}
+                <div className={styles.forecastCard}>
+                  <div className={styles.cardHeader}>
+                    <h4>Forecast by Probability</h4>
+                    <Target size={18} className={styles.cardIcon} />
+                  </div>
+                  <div className={styles.probabilityGrid}>
+                    {DUMMY_FORECAST.probability.map((item, i) => (
+                      <div key={i} className={styles.probCard} style={{ '--accent-color': item.color }}>
+                        <div className={styles.probHeader}>
+                          <span className={styles.probLevel}>{item.level}</span>
+                          <span className={styles.probLabel}>Confidence</span>
+                        </div>
+                        <div className={styles.probValueGroup}>
+                          <span className={styles.probValue}>{item.value}</span>
+                          <span className={styles.probSub}>Deal Value</span>
+                        </div>
+                        <div className={styles.probIndicator}>
+                          <div className={styles.probDot} />
+                          <div className={styles.probLine} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Revenue Breakdown Table */}
+              <div className={styles.monthlyRevenueSection}>
+                <div className={styles.sectionHeader}>
+                  <TrendingUp size={18} className={styles.sectionIcon} />
+                  <h4>Monthly Revenue Breakdown</h4>
+                </div>
+                <div className={styles.tableWrapper}>
+                  <table className={styles.reportTable}>
+                    <thead>
+                      <tr>
+                        <th>Month</th>
+                        <th>Forecasted Value</th>
+                        <th>Projected Deals</th>
+                        <th>Est. Growth</th>
+                        <th>Market Sentiment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DUMMY_FORECAST.monthly.map((row, i) => (
+                        <tr key={i}>
+                          <td className={styles.bold}>{row.month}</td>
+                          <td className={styles.accentText}>{row.value}</td>
+                          <td>{row.deals}</td>
+                          <td className={styles.positive}>{row.growth}</td>
+                          <td>
+                            <span className={`${styles.statusBadge} ${styles.forecastBadge}`}>
+                              {row.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
       {/* SHARE REPORT MODAL */}
       {showShareModal && (
         <div className={styles.modalOverlay} onClick={() => setShowShareModal(false)}>
@@ -818,7 +1048,6 @@ export default function Reports() {
               <div className={styles.shareOption} onClick={() => {
                 navigator.clipboard.writeText(`https://crm.acmecorp.com/reports/share/${sharePage}?exp=${shareExpiry.replace(' ', '')}`);
                 alert("Shareable link copied to clipboard!");
-                Bitter
               }}>
                 <div className={styles.optionIcon}><Link size={20} /></div>
                 <div className={styles.optionInfo}>

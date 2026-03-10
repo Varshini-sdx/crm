@@ -62,16 +62,16 @@ export const PerformanceScaling = ({ setActive }) => {
     }, []);
 
     const metrics = [
-        { label: "Active Users Today", value: "124", trend: "+12% vs yesterday", icon: <Users size={20} />, type: "usersIcon" },
-        { label: "API Requests Today", value: "12,430", trend: "+8% today", icon: <Activity size={20} />, type: "apiIcon" },
-        { label: "Database Queries", value: "45,000", trend: "Stable", icon: <Database size={20} />, type: "dbIcon" },
-        { label: "System Uptime", value: "99.99%", trend: "100% last 7d", icon: <Zap size={20} />, type: "uptimeIcon" },
+        { label: "Active Users", value: "42 / 100", trend: "High load", icon: <Users size={20} />, type: "usersIcon" },
+        { label: "API Requests", value: "12,400 today", trend: "+12% vs yesterday", icon: <Activity size={20} />, type: "apiIcon" },
+        { label: "Database Storage", value: "3.2 GB used", trend: "85% capacity", icon: <Database size={20} />, type: "dbIcon" },
+        { label: "Automations Running", value: "18 workflows", trend: "Normal", icon: <Zap size={20} />, type: "uptimeIcon" },
     ];
 
     const resources = [
-        { label: "CPU Usage", value: "45%", color: "progressGreen", sub: "Optimized Performance" },
-        { label: "Memory Usage", value: "3.2 GB / 8 GB", percent: 40, color: "progressGreen", sub: "2.4 GB Cache Allocated" },
-        { label: "Storage Usage", value: "12 GB / 20 GB", percent: 60, color: "progressOrange", sub: "Expansion Recommended at 80%" },
+        { label: "CPU Usage", value: "65%", percent: 65, color: "progressOrange", sub: "Core 1-4 Balanced" },
+        { label: "Memory Usage", value: "40%", percent: 40, color: "progressGreen", sub: "4.2 GB / 10 GB" },
+        { label: "Database Load", value: "75%", percent: 75, color: "progressOrange", sub: "Optimized indexing" },
     ];
 
     const getProgressColor = (val) => {
@@ -100,7 +100,7 @@ export const PerformanceScaling = ({ setActive }) => {
             <section>
                 <div className={styles.sectionTitle}>
                     <Gauge size={20} />
-                    System Usage Metrics
+                    System Metrics
                 </div>
                 <div className={styles.metricsGrid}>
                     {metrics.map((m, i) => (
@@ -139,7 +139,7 @@ export const PerformanceScaling = ({ setActive }) => {
                                 <div className={styles.progressBarContainer}>
                                     <div
                                         className={`${styles.progressBar} ${getProgressColor(r.percent || parseInt(r.value))}`}
-                                        style={{ width: r.percent || r.value }}
+                                        style={{ width: `${r.percent || r.value}%` }}
                                     ></div>
                                 </div>
                                 <span className={styles.titleInfo} style={{ fontSize: '0.75rem', marginTop: '-4px' }}>{r.sub}</span>
@@ -148,27 +148,13 @@ export const PerformanceScaling = ({ setActive }) => {
                     </div>
                 </div>
 
-                {/* Scaling Settings */}
+                {/* Scaling Controls */}
                 <div className={styles.settingsCard}>
                     <div className={styles.sectionTitle}>
                         <Settings size={20} />
-                        Scaling Settings
+                        Scaling Controls
                     </div>
                     <div className={styles.formGroup}>
-                        <div className={styles.inputField}>
-                            <div className={styles.inputLabel}>
-                                <strong>Auto Scaling</strong>
-                                <span>Dynamically adjust resources based on load</span>
-                            </div>
-                            <label className={styles.toggleSwitch}>
-                                <input
-                                    type="checkbox"
-                                    checked={autoScaling}
-                                    onChange={(e) => setAutoScaling(e.target.checked)}
-                                />
-                                <span className={styles.slider}></span>
-                            </label>
-                        </div>
                         <div className={styles.inputField}>
                             <div className={styles.inputLabel}>
                                 <strong>Max Concurrent Users</strong>
@@ -183,7 +169,7 @@ export const PerformanceScaling = ({ setActive }) => {
                         </div>
                         <div className={styles.inputField}>
                             <div className={styles.inputLabel}>
-                                <strong>API Rate Limit</strong>
+                                <strong>API Rate Limit (Req/min)</strong>
                                 <span>Requests per minute per workspace</span>
                             </div>
                             <input
@@ -193,9 +179,31 @@ export const PerformanceScaling = ({ setActive }) => {
                                 onChange={(e) => setRateLimit(e.target.value)}
                             />
                         </div>
+                        <div className={styles.inputField}>
+                            <div className={styles.inputLabel}>
+                                <strong>Automation Execution Limit</strong>
+                                <span>Workflows running concurrently</span>
+                            </div>
+                            <input
+                                type="number"
+                                className={styles.numberInput}
+                                defaultValue={50}
+                            />
+                        </div>
+                        <div className={styles.inputField}>
+                            <div className={styles.inputLabel}>
+                                <strong>File Upload Limit (MB)</strong>
+                                <span>Maximum size per single file upload</span>
+                            </div>
+                            <input
+                                type="number"
+                                className={styles.numberInput}
+                                defaultValue={50}
+                            />
+                        </div>
                         <button className={styles.saveBtn} onClick={() => alert("Settings saved successfully!")}>
                             <Save size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                            Save Configuration
+                            Save Changes
                         </button>
                     </div>
                 </div>
@@ -217,12 +225,14 @@ export const PerformanceScaling = ({ setActive }) => {
                             <AreaChart data={DUMMY_RESPONSE_TIME}>
                                 <defs>
                                     <linearGradient id="colorTime" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
+                                        <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
+                                        <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                        <stop offset="100%" stopColor="#d946ef" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={1} />
-                                        <stop offset="100%" stopColor="#d946ef" stopOpacity={1} />
+                                        <stop offset="0%" stopColor="#fb923c" stopOpacity={1} />
+                                        <stop offset="50%" stopColor="#f43f5e" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#ec4899" stopOpacity={1} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />

@@ -101,23 +101,27 @@
 }
 
 .usersIcon {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
 }
 
 .apiIcon {
-    background: #f5f3ff;
-    color: #8b5cf6;
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    color: #7c3aed;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
 }
 
 .dbIcon {
-    background: #fff7ed;
-    color: #f59e0b;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    color: #ea580c;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
 }
 
 .uptimeIcon {
-    background: #f0fdf4;
-    color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #16a34a;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
 }
 
 .metricLabel {
@@ -204,14 +208,17 @@
 
 .progressGreen {
     background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .progressOrange {
     background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 .progressRed {
     background: linear-gradient(90deg, #ef4444 0%, #f87171 50%, #fca5a5 100%);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* Scaling Settings Section */

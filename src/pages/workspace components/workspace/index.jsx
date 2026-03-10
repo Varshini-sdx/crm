@@ -14,7 +14,7 @@ import Billing from "../billing";
 import RBAC from "../rbac";
 import PerformanceScaling from "../performance scaling";
 import styles from "./workspace.module.css";
-import { Plus, Edit2, Trash2, X, ChevronRight, Zap, Filter, CheckCircle, ArrowRight } from "lucide-react";
+import { Plus, Edit2, Trash2, X, ChevronRight, Zap, Filter, CheckCircle, ArrowRight, ShieldCheck, Layers, UserPlus } from "lucide-react";
 
 const initialRules = [
   { id: 1, active: true, name: "Hot Leads Assignment", condition: "Lead Status = Hot", action: "Assign to Senior Sales" },
@@ -29,6 +29,44 @@ const initialWorkflows = [
   { id: 1, name: "New Lead Onboarding", trigger: "Lead Created", steps: 4, status: "Active", theme: "cardBlue" },
   { id: 2, name: "Stalled Deal Follow-up", trigger: "Deal Stage Unchanged", steps: 3, status: "Draft", theme: "cardOrange" },
   { id: 3, name: "VIP Welcome Sequence", trigger: "Tag Added: VIP", steps: 5, status: "Active", theme: "cardGreen" },
+];
+
+const enterpriseRules = [
+  {
+    id: "deal-approval",
+    title: "Deal Approval Rules",
+    icon: <ShieldCheck size={24} />,
+    description: "Multi-level authorization for high-value and high-discount deals.",
+    rules: [
+      { condition: "Discount > 20%", action: "Manager Approval Required" },
+      { condition: "Value > ₹10 Lakh", action: "Director Approval Required" },
+      { condition: "Contract > 3 Years", action: "Legal Approval Required" }
+    ],
+    theme: "enterprisePurple"
+  },
+  {
+    id: "pipeline-control",
+    title: "Sales Stage Rules",
+    icon: <Layers size={24} />,
+    description: "Control pipeline movement with mandatory field and state checks.",
+    rules: [
+      { condition: "Move to Proposal", action: "Budget + Decision Maker required" },
+      { condition: "Move to Closed Won", action: "Contract + Payment terms required" }
+    ],
+    theme: "enterpriseBlue"
+  },
+  {
+    id: "lead-qualification",
+    title: "Lead Qualification Rules",
+    icon: <UserPlus size={24} />,
+    description: "Automated scoring logic to determine lead quality and sales priority.",
+    rules: [
+      { condition: "Corporate Email", action: "+15 Score & Direct Sales Call" },
+      { condition: "Budget > ₹5 Lakh", action: "+30 Score" },
+      { condition: "Gmail/Yahoo", action: "-10 Score & Nurture" }
+    ],
+    theme: "enterpriseGreen"
+  }
 ];
 
 import axios from "axios";
@@ -334,6 +372,31 @@ const AutomationHome = ({ branch }) => {
                   <span>{wf.steps} Steps</span>
                   <span>Last edit: Today</span>
                 </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ----------- Enterprise Rules Section ----------- */}
+          <div className={styles.workflowSectionTitle}>Enterprise Rules</div>
+          <div className={styles.enterpriseGrid}>
+            {enterpriseRules.map((rule) => (
+              <div key={rule.id} className={`${styles.enterpriseCard} ${styles[rule.theme]}`}>
+                <div className={styles.entHeader}>
+                  <div className={styles.entIcon}>{rule.icon}</div>
+                  <div className={styles.entTitleGroup}>
+                    <div className={styles.entTitle}>{rule.title}</div>
+                    <div className={styles.entDesc}>{rule.description}</div>
+                  </div>
+                </div>
+                <div className={styles.entRulesList}>
+                  {rule.rules.map((r, i) => (
+                    <div key={i} className={styles.entRuleItem}>
+                      <span className={styles.entCondition}>{r.condition}</span>
+                      <span className={styles.entAction}>{r.action}</span>
+                    </div>
+                  ))}
+                </div>
+                <button className={styles.configureBtn}>Configure Logic</button>
               </div>
             ))}
           </div>

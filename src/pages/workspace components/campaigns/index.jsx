@@ -331,6 +331,7 @@ export const Campaigns = ({ branch }) => {
                         month: editFormData.month,
                         year: editFormData.year,
                         whatsappConfig: editFormData.channel === "WhatsApp" ? whatsappConfig : c.whatsappConfig,
+                        config: editFormData.channel !== "WhatsApp" ? campaignConfig : c.config,
                     }
                     : c
             )
@@ -529,8 +530,8 @@ export const Campaigns = ({ branch }) => {
                             <div className={styles.cardActions}>
                                 <button
                                     className={styles.editBtn}
-                                    onClick={() => handleOpenBuilder(camp)}
-                                    title="Open Campaign Builder"
+                                    onClick={() => handleEditCampaign(camp)}
+                                    title="Edit Campaign"
                                 >
                                     <Edit2 size={16} />
                                 </button>
@@ -636,53 +637,6 @@ export const Campaigns = ({ branch }) => {
                             </div>
                         </div>
 
-                        {/* ================= WHATSAPP CONFIG (CREATE) ================= */}
-                        {createFormData.channel === "WhatsApp" && (
-                            <div className={styles.channelSection}>
-                                <h3>WhatsApp Campaign Settings</h3>
-
-                                <div className={styles.formGroup}>
-                                    <label>Message Type</label>
-                                    <select
-                                        value={whatsappConfig.messageType}
-                                        onChange={(e) =>
-                                            setWhatsappConfig({ ...whatsappConfig, messageType: e.target.value })
-                                        }
-                                    >
-                                        <option value="Broadcast">Broadcast</option>
-                                        <option value="Follow-up">Follow-up</option>
-                                        <option value="Promotional">Promotional</option>
-                                    </select>
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label>Audience</label>
-                                    <select
-                                        value={whatsappConfig.audience}
-                                        onChange={(e) =>
-                                            setWhatsappConfig({ ...whatsappConfig, audience: e.target.value })
-                                        }
-                                    >
-                                        <option value="all">All Leads</option>
-                                        <option value="hot">Hot Leads</option>
-                                        <option value="custom">Custom Filter</option>
-                                    </select>
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label>Message Preview</label>
-                                    <textarea
-                                        rows="4"
-                                        value={whatsappConfig.message}
-                                        onChange={(e) =>
-                                            setWhatsappConfig({ ...whatsappConfig, message: e.target.value })
-                                        }
-                                        className={styles.pTextArea}
-                                    />
-                                    <small>Variables like {"{{name}}"} will be auto-filled</small>
-                                </div>
-                            </div>
-                        )}
 
                         <div className={styles.modalActions}>
                             <button className={styles.cancelBtn} onClick={handleCancelCreate}>
@@ -756,6 +710,64 @@ export const Campaigns = ({ branch }) => {
                                 </select>
                             </div>
                         </div>
+
+                        {/* ================= SOCIAL CONFIG ================= */}
+                        {editFormData.channel === "Social" && (
+                            <div className={styles.channelSection}>
+                                <h3>Social Media Settings</h3>
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label>Platform</label>
+                                        <select
+                                            value={campaignConfig.platform}
+                                            onChange={(e) => setCampaignConfig({ ...campaignConfig, platform: e.target.value })}
+                                        >
+                                            <option>Instagram</option>
+                                            <option>Facebook</option>
+                                            <option>LinkedIn</option>
+                                        </select>
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Post Type</label>
+                                        <select
+                                            value={campaignConfig.postType}
+                                            onChange={(e) => setCampaignConfig({ ...campaignConfig, postType: e.target.value })}
+                                        >
+                                            <option>Reel</option>
+                                            <option>Post</option>
+                                            <option>Story</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ================= EMAIL CONFIG ================= */}
+                        {editFormData.channel === "Email" && (
+                            <div className={styles.channelSection}>
+                                <h3>Email Quick Settings</h3>
+                                <div className={styles.formGroup}>
+                                    <label>Subject Line</label>
+                                    <input
+                                        type="text"
+                                        value={campaignConfig.subject}
+                                        onChange={(e) => setCampaignConfig({ ...campaignConfig, subject: e.target.value })}
+                                        placeholder="Enter subject line"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Template</label>
+                                    <select
+                                        value={campaignConfig.template}
+                                        onChange={(e) => setCampaignConfig({ ...campaignConfig, template: e.target.value })}
+                                    >
+                                        <option>Default Template</option>
+                                        <option>Newsletter</option>
+                                        <option>Promotion</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
 
                         {/* ================= WHATSAPP CONFIG ================= */}
                         {editFormData.channel === "WhatsApp" && (
