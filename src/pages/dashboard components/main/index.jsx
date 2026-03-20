@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import Leads from "../leads";
 import Deals from "../deals";
 import Tasks from "../tasks";
@@ -66,10 +66,25 @@ export default function Main({ active, branch, setActive }) {
         { type: "Meeting", time: "09:00 AM", title: "Morning Briefing - Sales Team" },
         { type: "Meeting", time: "10:00 AM", title: "Strategy Session with Global Tech" },
         { type: "Call", time: "11:30 AM", title: "Follow up with Wayne Corp" },
-        { type: "Task", time: "01:00 PM", title: "Update Pipeline Report" },
+        { type: "Task", time: "01:00 PM", title: "Update Pipeline Report", missed: true },
         { type: "Task", time: "02:00 PM", title: "Review Q1 Financial Report" }
     ]);
     const [mapView, setMapView] = useState("world");
+
+    // Default fallback states for the new endpoints
+    const [leadStatusData, setLeadStatusData] = useState([
+        { name: "hot", value: 35, color: "#0918a0", grad: "pieGrad1" },
+        { name: "new", value: 45, color: "#00b82b", grad: "pieGrad2" },
+        { name: "converted", value: 15, color: "#f79106", grad: "pieGrad3" },
+        { name: "lost", value: 5, color: "#ff00a0", grad: "pieGrad4" },
+    ]);
+
+    const [recentActivities, setRecentActivities] = useState([
+        { id: 1, type: "deal", title: "Deal Closed", desc: "Premium plan for 'Tech Sol'", time: "2h ago", icon: <CheckCircle2 size={14} />, color: "#3bbfa0" },
+        { id: 2, type: "lead", title: "Lead Assigned", desc: "Rahul assigned to 'Amit K.'", time: "4h ago", icon: <UserPlus size={14} />, color: "#6b5cff" },
+        { id: 3, type: "task", title: "Task Completed", desc: "Follow up call with Rohan", time: "1d ago", icon: <ListChecks size={14} />, color: "#ffc56e" },
+        { id: 4, type: "meeting", title: "Meeting Scheduled", desc: "Demo with 'Blue Corp'", time: "1d ago", icon: <CalIcon size={14} />, color: "#ff8fa3" },
+    ]);
 
     useEffect(() => {
         if (active === "Dashboard") {
@@ -77,25 +92,98 @@ export default function Main({ active, branch, setActive }) {
                 try {
                     const token = localStorage.getItem("token");
                     const headers = { Authorization: `Bearer ${token}` };
-                    const BASE_URL = "http://192.168.1.61:5000";
 
-                    const [resSummary, resRevenue, resTasks] = await Promise.all([
-                        axios.get(`${BASE_URL}/api/dashboard/summary`, { headers }).catch(() => ({ data: null })),
-                        axios.get(`${BASE_URL}/api/dashboard/revenue-growth`, { headers }).catch(() => ({ data: null })),
-                        axios.get(`${BASE_URL}/api/reminders/today`, { headers }).catch(() => ({ data: null }))
+                    const [resSummary, resRevenue, resTasks, resLeadsStatus, resRecentActivities, resDealsGrowth] = await Promise.all([
+                        api.get(`/dashboard/summary`, { headers }).catch(() => ({ data: null })),
+                        api.get(`/dashboard/total-revenue`, { headers }).catch(() => ({ data: null })),
+                        api.get(`/api/reminders/today`, { headers }).catch(() => ({ data: null })),
+                        api.get(`/dashboard/leads-status`, { headers }).catch(() => ({ data: null })),
+                        api.get(`/dashboard/recent-activity`, { headers }).catch(() => ({ data: null })),
+                        api.get(`/dashboard/deals-growth`, { headers }).catch(() => ({ data: null }))
                     ]);
 
                     if (resSummary?.data) {
-                        setSummary(resSummary.data);
+                        setSummary({
+                            total_leads: resSummary.data.total_leads || summary.total_leads,
+                            leads_growth: resSummary.data.leads_growth || summary.leads_growth,
+                            active_deals: resSummary.data.active_deals || summary.active_deals,
+                            deals_progress: resSummary.data.deals_progress || summary.deals_progress,
+                            revenue: resSummary.data.revenue || summary.revenue,
+                            revenue_period: resSummary.data.revenue_period || summary.revenue_period,
+                            tasks_due: resSummary.data.tasks_due || summary.tasks_due,
+                            tasks_overdue: resSummary.data.tasks_overdue || summary.tasks_overdue,
+                        });
                     }
 
-                    if (Array.isArray(resRevenue?.data) && resRevenue.data.length > 0) {
-                        setRevenueData(processRevenue(resRevenue.data));
+                    // Handle Deals Growth Response
+                    if (resDealsGrowth?.data) {
+                        setSummary(prev => ({
+                            ...prev,
+                            active_deals: resDealsGrowth.data.active_deals || prev.active_deals,
+                            deals_progress: resDealsGrowth.data.deals_growth || resDealsGrowth.data.deals_progress || prev.deals_progress
+                        }));
+                    }
+
+                    // Directly update the revenue KPI data if the endpoint returns { total_revenue: ... }
+                    if (resRevenue?.data) {
+                        if (resRevenue.data.total_revenue !== undefined) {
+                            setSummary(prev => ({
+                                ...prev,
+                                revenue: `₹${Number(resRevenue.data.total_revenue).toLocaleString()}`
+                            }));
+                        }
+
+                        // If it ALSO contains an array we update the big chart
+                        let revenueArr = Array.isArray(resRevenue.data) ? resRevenue.data : (resRevenue.data.data || resRevenue.data.revenue || resRevenue.data.monthly_revenue || null);
+                        if (Array.isArray(revenueArr) && revenueArr.length > 0) {
+                            setRevenueData(processRevenue(revenueArr));
+                        }
                     }
 
                     if (Array.isArray(resTasks?.data) && resTasks.data.length > 0) {
                         setTodayTasks(resTasks.data.slice(0, 5));
                     }
+
+                    console.log("LEADS STATUS RAW RESPONSE:", resLeadsStatus?.data);
+                    // Handle nested arrays like { status: [...] } or just [...]
+                    let leadsData = Array.isArray(resLeadsStatus?.data) ? resLeadsStatus.data : (resLeadsStatus?.data?.data || resLeadsStatus?.data?.leads || resLeadsStatus?.data?.status || null);
+
+                    if (Array.isArray(leadsData) && leadsData.length > 0) {
+                        const defaultColors = [
+                            { color: "#0918a0", grad: "pieGrad1" }, // hot
+                            { color: "#00b82b", grad: "pieGrad2" }, // new
+                            { color: "#f79106", grad: "pieGrad3" }, // converted
+                            { color: "#ff00a0", grad: "pieGrad4" }, // lost
+                        ];
+                        const enrichedStatus = leadsData.map((item, index) => ({
+                            ...item,
+                            name: item.name || item.status || item._id || "Unknown",
+                            value: item.value || item.count || 0,
+                            color: defaultColors[index % defaultColors.length].color,
+                            grad: defaultColors[index % defaultColors.length].grad
+                        }));
+                        setLeadStatusData(enrichedStatus);
+                    }
+
+                    console.log("RECENT ACTIVITIES RAW RESPONSE:", resRecentActivities?.data);
+                    let activitiesData = Array.isArray(resRecentActivities?.data) ? resRecentActivities.data : (resRecentActivities?.data?.data || resRecentActivities?.data?.activities || null);
+
+                    if (Array.isArray(activitiesData) && activitiesData.length > 0) {
+                        const mappedActivities = activitiesData.map((act, index) => {
+                            let icon = <CheckCircle2 size={14} />;
+                            let color = "#3bbfa0";
+                            if (act.type === "lead" || act.title?.toLowerCase().includes("lead")) {
+                                icon = <UserPlus size={14} />; color = "#6b5cff";
+                            } else if (act.type === "task" || act.title?.toLowerCase().includes("task")) {
+                                icon = <ListChecks size={14} />; color = "#ffc56e";
+                            } else if (act.type === "meeting" || act.title?.toLowerCase().includes("meeting")) {
+                                icon = <CalIcon size={14} />; color = "#ff8fa3";
+                            }
+                            return { ...act, id: act.id || index, icon, color, time: act.time || act.created_at || "Just now" };
+                        });
+                        setRecentActivities(mappedActivities.slice(0, 10)); // keep UI clean
+                    }
+
                 } catch (error) {
                     console.error("Error fetching dashboard data:", error);
                 }
@@ -103,21 +191,6 @@ export default function Main({ active, branch, setActive }) {
             fetchDashboard();
         }
     }, [active]);
-
-    // --- 3rd Row Dummy Data ---
-    const leadStatusData = [
-        { name: "New", value: 45, color: "#0918a0", grad: "pieGrad1" },
-        { name: "Contacted", value: 30, color: "#00b82b", grad: "pieGrad2" },
-        { name: "Qualified", value: 15, color: "#f79106", grad: "pieGrad3" },
-        { name: "Closed", value: 10, color: "#ff00a0", grad: "pieGrad4" },
-    ];
-
-    const recentActivities = [
-        { id: 1, type: "deal", title: "Deal Closed", desc: "Premium plan for 'Tech Sol'", time: "2h ago", icon: <CheckCircle2 size={14} />, color: "#3bbfa0" },
-        { id: 2, type: "lead", title: "Lead Assigned", desc: "Rahul assigned to 'Amit K.'", time: "4h ago", icon: <UserPlus size={14} />, color: "#6b5cff" },
-        { id: 3, type: "task", title: "Task Completed", desc: "Follow up call with Rohan", time: "1d ago", icon: <ListChecks size={14} />, color: "#ffc56e" },
-        { id: 4, type: "meeting", title: "Meeting Scheduled", desc: "Demo with 'Blue Corp'", time: "1d ago", icon: <CalIcon size={14} />, color: "#ff8fa3" },
-    ];
 
 
 
@@ -221,17 +294,17 @@ export default function Main({ active, branch, setActive }) {
                             {/* Today Card */}
                             <div className={styles.todayCard}>
                                 <div className={styles.todayHeader}>
-                                    <h3>Today</h3>
+                                    <h3>Today's Activities</h3>
                                     <span>Tue, 16 Jan</span>
                                 </div>
 
                                 <div className={styles.todayList}>
                                     {todayTasks.length === 0 && <p style={{ padding: '10px', color: '#888', fontSize: '0.9rem' }}>No tasks for today</p>}
                                     {todayTasks.map((task, i) => (
-                                        <div key={i} className={`${styles.todayItem} ${styles[task.type?.toLowerCase()] || styles.work}`}>
-                                            <span className={styles.dot}></span>
-                                            <span className={styles.time}>{task.time}</span>
-                                            <p>{task.title}</p>
+                                        <div key={i} className={`${styles.todayItem} ${styles[task.type?.toLowerCase()] || styles.work} ${task.missed ? styles.missedItem : ""}`}>
+                                            <span className={`${styles.dot} ${task.missed ? styles.missedDot : ""}`}></span>
+                                            <span className={`${styles.time} ${task.missed ? styles.missedTime : ""}`}>{task.time}</span>
+                                            <p className={task.missed ? styles.missedText : ""}>{task.title}</p>
                                         </div>
                                     ))}
                                 </div>

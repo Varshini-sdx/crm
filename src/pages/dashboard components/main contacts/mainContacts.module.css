@@ -426,3 +426,120 @@
 .iconBtn:hover {
   transform: scale(1.1);
 }
+
+/* --- Contacts Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .contactStats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .tableHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .searchBarRight {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .searchBarRight > div {
+    width: 100%;
+    flex-direction: column-reverse !important;
+  }
+
+  .searchInputWrap {
+    width: 100%;
+  }
+
+  .createBtn {
+    width: 100%;
+  }
+
+  .contactsTableWrap {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .contactsTable thead {
+    display: none;
+  }
+
+  .contactsTable,
+  .contactsTable tbody,
+  .contactsTable tr,
+  .contactsTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .contactsTable tr {
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 20px;
+    margin-bottom: 1.2rem;
+    padding: 1.2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+    position: relative;
+  }
+
+  .contactsTable td {
+    padding: 0.6rem 0;
+    border-bottom: 1px dashed #f0f0f0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .contactsTable td:last-child {
+    border-bottom: none;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .contactsTable td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    width: 100px;
+    font-size: 0.75rem;
+    color: #8a8fb2;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .contactCell {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2a44;
+    border-bottom: 1px solid #f0f0f0 !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .contactCell::before {
+    display: none !important;
+  }
+
+  .contactsTable td[data-label="Actions"]::before {
+    display: none;
+  }
+
+  .modalContent {
+    width: 95%;
+    margin: 10px;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contactStats {
+    grid-template-columns: 1fr;
+  }
+}

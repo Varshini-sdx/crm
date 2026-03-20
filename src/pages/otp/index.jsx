@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import styles from "./otp.module.css";
@@ -37,8 +37,8 @@ export default function Otp() {
         try {
             setLoading(true);
 
-            const res = await axios.post(
-                "http://192.168.1.61:5000/auth/verify-otp",
+            const res = await api.post(
+                "/auth/verify-otp",
                 {
                     email,
                     otp, // change to code: otp if backend expects that
@@ -68,8 +68,8 @@ export default function Otp() {
         setResending(true);
 
         try {
-            await axios.post(
-                "http://192.168.1.61:5000/auth/forgot-password",
+            await api.post(
+                "/auth/forgot-password",
                 { email }
             );
 

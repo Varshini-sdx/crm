@@ -29,7 +29,10 @@ import {
     ChevronRight,
     Search,
     Layers,
-    Star
+    Star,
+    Menu,
+    X,
+    MoreVertical
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -85,6 +88,8 @@ export default function Dashboard() {
     const [openDropdown, setOpenDropdown] = useState(null); // "notification" | "profile" | null
     const [showNPS, setShowNPS] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(true);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showMoreActions, setShowMoreActions] = useState(false);
 
     // Refs for dropdowns
     const notificationRef = useRef(null);
@@ -156,13 +161,29 @@ export default function Dashboard() {
         <>
 
 
-            <div className={`${styles.layout} ${isCollapsed ? styles.collapsedLayout : ""}`}>
+            <div className={`${styles.layout} ${isCollapsed ? styles.collapsedLayout : ""} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}>
+                {/* Mobile Sidebar Overlay */}
+                <AnimatePresence>
+                    {isMobileMenuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={styles.sidebarOverlay}
+                        />
+                    )}
+                </AnimatePresence>
+
                 {/* Sidebar */}
-                <aside className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : styles.sidebarExpanded}`}>
+                <aside className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : styles.sidebarExpanded} ${isMobileMenuOpen ? styles.mobileSidebarVisible : ""}`}>
 
                     <div className={styles.orgBlock}>
                         <div className={styles.logoCircle} data-label="Rvh Crm">RVH</div>
                         {!isCollapsed && <h3 className={styles.orgName}>{fakeOrg.name}</h3>}
+                        <button className={styles.mobileCloseBtn} onClick={() => setIsMobileMenuOpen(false)}>
+                            <X size={24} />
+                        </button>
                     </div>
 
                     {!isCollapsed && (
@@ -255,32 +276,73 @@ export default function Dashboard() {
                 < main className={styles.main} >
                     <div className={styles.workspace}>
                         <div className={styles.header}>
-                            <h1>{active === "Inbox" ? "Inbox (Calls)" : active}</h1>
+                            <div className={styles.headerLeft}>
+                                <button
+                                    className={styles.hamburgerBtn}
+                                    onClick={() => setIsMobileMenuOpen(true)}
+                                >
+                                    <Menu size={24} />
+                                </button>
+                                <h1>{active === "Inbox" ? "Inbox (Calls)" : active}</h1>
+                            </div>
 
                             <div className={styles.headerIcons}>
-                                <button
-                                    className={`${styles.iconBtn} ${styles.btnSettings}`}
-                                    onClick={() => setActive("Settings")}
-                                    data-tooltip="Settings"
-                                >
-                                    <Settings size={20} />
-                                </button>
+                                <div className={styles.desktopIcons}>
+                                    <button
+                                        className={`${styles.iconBtn} ${styles.btnSettings}`}
+                                        onClick={() => setActive("Settings")}
+                                        data-tooltip="Settings"
+                                    >
+                                        <Settings size={20} />
+                                    </button>
 
-                                <button
-                                    className={`${styles.iconBtn} ${styles.btnCalendar} ${active === "Calendar" ? styles.activeIcon : ""}`}
-                                    onClick={() => setActive("Calendar")}
-                                    data-tooltip="Calendar"
-                                >
-                                    <Calendar size={20} />
-                                </button>
+                                    <button
+                                        className={`${styles.iconBtn} ${styles.btnCalendar} ${active === "Calendar" ? styles.activeIcon : ""}`}
+                                        onClick={() => setActive("Calendar")}
+                                        data-tooltip="Calendar"
+                                    >
+                                        <Calendar size={20} />
+                                    </button>
 
-                                <button
-                                    className={`${styles.iconBtn} ${styles.btnInbox} ${active === "Inbox" ? styles.activeIcon : ""}`}
-                                    onClick={() => setActive("Inbox")}
-                                    data-tooltip="Communications"
-                                >
-                                    <Phone size={20} />
-                                </button>
+                                    <button
+                                        className={`${styles.iconBtn} ${styles.btnInbox} ${active === "Inbox" ? styles.activeIcon : ""}`}
+                                        onClick={() => setActive("Inbox")}
+                                        data-tooltip="Communications"
+                                    >
+                                        <Phone size={20} />
+                                    </button>
+                                </div>
+
+                                {/* More Menu for Mobile */}
+                                <div className={styles.mobileMoreActions} ref={notificationRef}> {/* Reusing notificationRef for simplicity or add new */}
+                                    <button
+                                        className={styles.iconBtn}
+                                        onClick={() => setShowMoreActions(!showMoreActions)}
+                                    >
+                                        <MoreVertical size={20} />
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {showMoreActions && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                className={styles.moreActionsDropdown}
+                                            >
+                                                <button onClick={() => { setActive("Calendar"); setShowMoreActions(false); }}>
+                                                    <Calendar size={18} /> Calendar
+                                                </button>
+                                                <button onClick={() => { setActive("Inbox"); setShowMoreActions(false); }}>
+                                                    <Phone size={18} /> Calls
+                                                </button>
+                                                <button onClick={() => { setActive("Settings"); setShowMoreActions(false); }}>
+                                                    <Settings size={18} /> Settings
+                                                </button>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
 
                                 <div className={styles.relativeWrap} ref={notificationRef}>
                                     <button

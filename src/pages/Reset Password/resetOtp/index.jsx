@@ -4,7 +4,7 @@ import styles from "./resetOtp.module.css";
 import { useNavigate, NavLink } from "react-router-dom";
 
 
-import axios from "axios";
+import api from "@/api/axios";
 
 export default function ResetOtp() {
 
@@ -28,8 +28,8 @@ export default function ResetOtp() {
         try {
             setLoading(true);
 
-            const res = await axios.post(
-                "http://192.168.1.61:5000/auth/verify-reset-otp",
+            const res = await api.post(
+                "/auth/verify-reset-otp",
                 { email, otp }
             );
 
@@ -55,7 +55,7 @@ export default function ResetOtp() {
         setInfo("");
 
         try {
-            await axios.post("http://192.168.1.61:5000/auth/forgot-password", {
+            await api.post("/auth/forgot-password", {
                 email,
             });
 

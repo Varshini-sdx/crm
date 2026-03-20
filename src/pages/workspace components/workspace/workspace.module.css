@@ -1106,3 +1106,98 @@ input:checked+.slider:before {
   font-weight: 800;
   font-size: 14px;
 }
+
+/* --- Workspace Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .tabsContainer {
+    padding: 0 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-bottom: 1rem;
+  }
+
+  .tabsContainer::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabsNav {
+    width: max-content;
+    gap: 1.5rem;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .titleSection h1 {
+    font-size: 1.35rem;
+  }
+
+  .rulesHeader {
+    display: none;
+  }
+
+  .ruleRow {
+    grid-template-columns: 1fr;
+    padding: 1.2rem;
+    gap: 1rem;
+    border: 1px solid #f3f4f6;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  .ruleRow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .actions {
+    justify-content: flex-start;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 0.8rem;
+    margin-top: 0.4rem;
+  }
+
+  .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .builderContainer {
+    padding: 1rem 0.5rem;
+  }
+
+  .flowNode {
+    width: 100%;
+    max-width: none;
+  }
+
+  .drawer {
+    width: 100%;
+  }
+
+  .drawerContent {
+    padding: 1.2rem;
+  }
+
+  .drawerFooter {
+    padding: 1.2rem;
+  }
+
+  .stepper {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .step {
+    flex: 1 1 40%;
+  }
+}

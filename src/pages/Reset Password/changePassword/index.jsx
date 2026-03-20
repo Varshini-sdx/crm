@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./changePassword.module.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import api from "@/api/axios";
 
 export default function ChangePassword() {
     const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function ChangePassword() {
         setLoading(true);
 
         try {
-            await axios.post("http://192.168.1.61:5000/auth/reset-password", {
+            await api.post("/auth/reset-password", {
                 email,
                 otp,
                 new_password: password,

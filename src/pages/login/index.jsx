@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./login.module.css";
 import loginImg from "../../assets/login_img.jpg";
-
-
-
-export default function Login() {
+import api from "@/api/axios";export default function Login() {
     const navigate = useNavigate();
 
     const [email, setEmail] = useState("");
@@ -19,30 +16,20 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const res = await fetch("http://192.168.1.61:5000/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await res.json();
-            console.log("LOGIN RESPONSE:", data, res.ok);
-
-
-            if (!res.ok) {
-                throw new Error(data.message || "Login failed");
-            }
+            const res = await api.post("/auth/login", { email, password });
+            const data = res.data;
+            console.log("LOGIN RESPONSE:", data);
 
             // Save token after successful login
             localStorage.setItem("token", data.token);
-            localStorage.setItem("role", data.role); // optional but useful
+            if (data.role) {
+                localStorage.setItem("role", data.role);
+            }
 
             // Success → go to dashboard / home
             navigate("/organisation-setup");
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.message || err.message || "Login failed");
         } finally {
             setLoading(false);
         }

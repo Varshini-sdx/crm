@@ -17,7 +17,7 @@ import {
     MoreVertical,
     TrendingUp
 } from "lucide-react";
-import axios from "axios";
+import api from "@/api/axios";
 
 const mockTickets = [
     {
@@ -147,7 +147,7 @@ export const SupportTickets = () => {
 
     const fetchTickets = useCallback(async () => {
         try {
-            const response = await axios.get("http://192.168.1.61:5000/api/support-tickets", {
+            const response = await api.get("/api/support-tickets", {
                 headers: getAuthHeader()
             });
             const raw = response.data;

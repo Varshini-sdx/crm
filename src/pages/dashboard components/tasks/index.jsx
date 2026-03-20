@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import {
   CheckCircle,
   Clock,
@@ -30,7 +30,14 @@ export default function Tasks() {
     { id: "d5", title: "Finalize Vendor Contract", related: "Vendor Mgmt", priority: "Medium", due: "Today", owner: "Varshini", done: true },
   ];
 
-  const [tasks, setTasks] = useState(DUMMY_TASKS);
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem("crm_tasks_list");
+    return saved ? JSON.parse(saved) : DUMMY_TASKS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("crm_tasks_list", JSON.stringify(tasks));
+  }, [tasks]);
   const [loading, setLoading] = useState(false);
 
   const [filter, setFilter] = useState("All");
@@ -38,48 +45,43 @@ export default function Tasks() {
   const [newTask, setNewTask] = useState({ title: "", related: "", priority: "Medium", due: "Today", owner: "Varshini" });
 
   const [activeTab, setActiveTab] = useState("tasks");
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState(() => {
+    const saved = localStorage.getItem("crm_tasks_notes");
+    return saved ? JSON.parse(saved) : [
+      { id: "n1", note: "Remember to follow up with the marketing team about the Q1 plan.", created_at: new Date(Date.now() - 3600000).toLocaleString() },
+      { id: "n2", note: "The contract for Alpha Corp needs legal review before Friday.", created_at: new Date(Date.now() - 86400000).toLocaleString() }
+    ];
+  });
   const [noteText, setNoteText] = useState("");
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [noteActionLoading, setNoteActionLoading] = useState(null);
 
-  const [files, setFiles] = useState([]);
+  useEffect(() => {
+    localStorage.setItem("crm_tasks_notes", JSON.stringify(notes));
+  }, [notes]);
+
+  const getNoteId = (n) => n?.id || n?._id || n?.note_id;
+
+  const DUMMY_FILES = [
+    { id: "f1", file_name: "Project_Proposal.pdf", size: "2.4 MB", created_at: new Date().toISOString() },
+    { id: "f2", file_name: "Brand_Asset_Pack.zip", size: "15.8 MB", created_at: new Date(Date.now() - 86400000).toISOString() },
+    { id: "f3", file_name: "Q4_Performance_Data.xlsx", size: "840 KB", created_at: new Date(Date.now() - 172800000).toISOString() }
+  ];
+
+  const [files, setFiles] = useState(() => {
+    const saved = localStorage.getItem("crm_tasks_files");
+    return saved ? JSON.parse(saved) : DUMMY_FILES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("crm_tasks_files", JSON.stringify(files));
+  }, [files]);
 
   /* TASK HANDLERS */
-  const fetchTasks = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://192.168.1.61:5000/api/tasks/my", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Map backend fields to frontend if needed
-      const rawData = res.data.tasks || res.data;
-      const tasksArray = Array.isArray(rawData) ? rawData : (rawData.tasks || [rawData]);
-
-      const mapped = tasksArray.map((t, index) => {
-        const id = (t.id !== undefined && t.id !== null) ? t.id : (t.task_id || t.taskId || t._id || `task-${index}`);
-        return {
-          ...t,
-          id,
-          done: t.status === 'completed' || t.status === 'done' || !!t.done,
-          title: t.title || "Untitled Task",
-          priority: t.priority || 'Medium',
-          due: t.due_date ? new Date(t.due_date).toLocaleDateString() : (t.due || 'No date'),
-          owner: t.owner || t.assigned_to || t.assigned_user_id || "Unassigned",
-          related: t.related || t.related_to || ""
-        };
-      });
-
-      // Show backend data if available, else retain dummy data
-      if (mapped && mapped.length > 0) {
-        setTasks(mapped);
-      }
-    } catch (err) {
-      console.error("Failed to fetch tasks", err);
-      // Retain dummy tasks on error
-    } finally {
-      setLoading(false);
-    }
+  const fetchTasks = () => {
+    // Purely frontend for now as requested
+    console.log("Tasks loaded from local state");
   };
 
   useEffect(() => {
@@ -88,61 +90,25 @@ export default function Tasks() {
     }
   }, [activeTab]);
 
-  const toggleTask = async (id, currentStatus) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(`http://192.168.1.61:5000/api/tasks/${id}/complete`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
-    } catch (err) {
-      console.error("Failed to update task", err);
-    }
+  const toggleTask = (id) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
-  const addTask = async (e) => {
+  const addTask = (e) => {
     e.preventDefault();
     if (!newTask.title.trim()) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post("http://192.168.1.61:5000/api/tasks", {
-        title: newTask.title,
-        description: "",
-        priority: newTask.priority,
-        due_date: newTask.due || "today",
-        related: newTask.related,
-        assigned_to: 2, // Backend requires an integer
-        lead_id: 2 // Backend requires an integer
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const taskData = res.data.task || res.data;
-      const id = (taskData.id !== undefined && taskData.id !== null) ? taskData.id : (taskData.task_id || taskData.taskId || taskData._id || Date.now());
-
-      const addedTask = {
-        ...taskData,
-        id,
-        done: false,
-        priority: taskData.priority || newTask.priority || "Medium",
-        due: taskData.due_date || taskData.due || newTask.due || "Today",
-        related: taskData.related_to || taskData.related || newTask.related || ""
-      };
-
-      setTasks(prev => {
-        // Prevent duplicates if fetchTasks already ran
-        if (prev.find(t => t.id === addedTask.id)) return prev;
-        return [...prev, addedTask];
-      });
-
-      setShowTaskModal(false);
-      setNewTask({ title: "", related: "Manual", priority: "Medium", due: "Today", owner: "Varshini" });
-
-      // Delay fetch slightly to let backend sync (common with MySQL)
-      setTimeout(() => fetchTasks(), 500);
-    } catch (err) {
-      console.error("Failed to add task", err);
-    }
+    const addedTask = {
+      id: `task-${Date.now()}`,
+      title: newTask.title,
+      related: newTask.related || "Manual",
+      priority: newTask.priority,
+      due: newTask.due || "Today",
+      owner: "Varshini",
+      done: false
+    };
+    setTasks(prev => [...prev, addedTask]);
+    setShowTaskModal(false);
+    setNewTask({ title: "", related: "", priority: "Medium", due: "Today", owner: "Varshini" });
   };
 
   const filteredTasks = tasks.filter(t => {
@@ -160,69 +126,35 @@ export default function Tasks() {
   }, [activeTab]);
 
   const fetchFiles = async () => {
-    try {
-      const res = await axios.get(
-        "http://192.168.1.61:5000/api/files",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          params: {
-            entity_type: "lead",
-            entity_id: 1,
-          },
-        }
-      );
-      setFiles(res.data);
-    } catch (err) {
-      console.error("Failed to fetch files", err.response?.data || err);
-    }
+    // Purely frontend for now as requested
+    console.log("Files loaded from localStorage/dummy data");
   };
 
   const handleFileUpload = async (e) => {
     const selectedFiles = Array.from(e.target.files);
     for (const file of selectedFiles) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("entity_type", "lead");
-      formData.append("entity_id", "1");
-
-      try {
-        const res = await axios.post(
-          "http://192.168.1.61:5000/api/files",
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        setFiles((prev) => [res.data, ...prev]);
-      } catch (err) {
-        console.error("File upload failed", err.response?.data || err);
-      }
+      const newFile = {
+        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        file_name: file.name,
+        size: (file.size / 1024).toFixed(1) > 1024 
+          ? (file.size / (1024 * 1024)).toFixed(1) + " MB" 
+          : (file.size / 1024).toFixed(1) + " KB",
+        created_at: new Date().toISOString()
+      };
+      setFiles((prev) => [newFile, ...prev]);
     }
   };
 
   /* NOTES */
-  const addNote = async () => {
+  const addNote = () => {
     if (!noteText.trim()) return;
-    try {
-      await axios.post(
-        "http://192.168.1.61:5000/api/notes",
-        { note: noteText },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      setNoteText("");
-      fetchNotes();
-    } catch (err) {
-      console.error("Failed to add note", err);
-    }
+    const newNote = {
+      id: `note-${Date.now()}`,
+      note: noteText,
+      created_at: new Date().toLocaleString()
+    };
+    setNotes(prev => [newNote, ...prev]);
+    setNoteText("");
   };
 
   useEffect(() => {
@@ -231,21 +163,8 @@ export default function Tasks() {
     }
   }, [activeTab]);
 
-  const fetchNotes = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        "http://192.168.1.61:5000/api/notes",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setNotes(res.data.notes || res.data);
-    } catch (err) {
-      console.error("Failed to fetch notes", err);
-    }
+  const fetchNotes = () => {
+    console.log("Notes loaded from local state");
   };
 
   return (
@@ -395,81 +314,87 @@ export default function Tasks() {
             <textarea
               placeholder="Write a quick note…"
               value={noteText}
+              disabled={noteActionLoading === 'adding'}
               onChange={(e) => setNoteText(e.target.value)}
             />
-            <button onClick={addNote}>Post Note</button>
+            <button 
+              onClick={addNote} 
+              disabled={noteActionLoading === 'adding'}
+            >
+              {noteActionLoading === 'adding' ? '...' : 'Add'}
+            </button>
           </div>
 
-          {notes.map((n, i) => (
-            <div key={i} className={styles.noteCard}>
-              {editingIndex === i ? (
-                <>
-                  <textarea
-                    className={styles.editTextarea}
-                    value={noteText}
-                    style={{ width: '100%', marginBottom: '10px' }}
-                    onChange={(e) => setNoteText(e.target.value)}
-                  />
-                  <div className={styles.noteActions}>
-                    <button className={styles.actionBtn} style={{ background: '#6b5cff', color: '#fff' }}
-                      onClick={async () => {
-                        try {
-                          const noteId = notes[i].id;
-                          await axios.put(
-                            `http://192.168.1.61:5000/api/notes/${noteId}`,
-                            { note: noteText },
-                            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-                          );
-                          const updatedNotes = [...notes];
-                          updatedNotes[i] = { ...updatedNotes[i], note: noteText };
-                          setNotes(updatedNotes);
-                          setEditingIndex(null);
-                          setNoteText("");
-                        } catch (err) {
-                          console.error("Failed to update note", err);
-                        }
-                      }}
-                    >
-                      Save
-                    </button>
-                    <button className={styles.actionBtn} onClick={() => setEditingIndex(null)}>Cancel</button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p>{n.note}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span><Clock size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> {n.created_at}</span>
+          {notes.map((n, i) => {
+            const currentNoteId = getNoteId(n);
+            const isNoteLoading = noteActionLoading === currentNoteId;
+
+            return (              <div key={currentNoteId || i} className={`${styles.noteCard} ${editingNoteId === currentNoteId ? styles.editing : ""}`}>
+                {editingNoteId === currentNoteId ? (
+                  <div className={styles.premiumEditor}>
+                    <textarea
+                      autoFocus
+                      className={styles.editTextarea}
+                      value={editingText}
+                      disabled={isNoteLoading}
+                      onChange={(e) => setEditingText(e.target.value)}
+                    />
                     <div className={styles.noteActions}>
-                      <button className={styles.actionBtn}
+                      <button 
+                        className={styles.saveActionBtn}
                         onClick={() => {
-                          setEditingIndex(i);
-                          setNoteText(n.note);
+                          if (!editingText.trim()) return;
+                          setNotes(prev => prev.map(n => (n.id === currentNoteId ? { ...n, note: editingText } : n)));
+                          setEditingNoteId(null);
+                          setEditingText("");
                         }}
                       >
-                        <Edit3 size={14} /> Edit
+                        Save Changes
                       </button>
-                      <button className={styles.actionBtn} style={{ color: '#ff6a88' }}
-                        onClick={async () => {
-                          try {
-                            const noteId = notes[i].id;
-                            await axios.delete(`http://192.168.1.61:5000/api/notes/${noteId}`, {
-                              headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-                            });
-                            setNotes(notes.filter((_, index) => index !== i));
-                          } catch (err) {
-                            console.error("Failed to delete note");
-                          }
+                      <button 
+                        className={styles.cancelActionBtn}
+                        disabled={isNoteLoading}
+                        onClick={() => {
+                          setEditingNoteId(null);
+                          setEditingText("");
                         }}
                       >
-                        <Trash2 size={14} /> Delete
+                        Cancel
                       </button>
                     </div>
                   </div>
-                </>
-              )}
-            </div>
-          ))}
+                ) : (
+                  <>
+                    <p>{n.note}</p>
+                    <div className={styles.noteMeta}>
+                      <span>{n.created_at || "Just now"}</span>
+                      <div className={styles.noteActions}>
+                        <button className={styles.actionBtn}
+                          disabled={isNoteLoading}
+                          onClick={() => {
+                            setEditingNoteId(currentNoteId);
+                            setEditingText(n.note || "");
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button className={styles.actionBtn}
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this note?")) {
+                              setNotes(prev => prev.filter(n => n.id !== currentNoteId));
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+            );
+          })}
           {notes.length === 0 && <div style={{ textAlign: 'center', color: '#8a8fb2', padding: '2rem' }}>No notes found.</div>}
         </div>
       )}
@@ -477,22 +402,30 @@ export default function Tasks() {
       {/* FILES TAB */}
       {activeTab === "files" && (
         <div className={styles.panel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.4rem' }}>
-            <h3>Shared Files</h3>
-            <label className={styles.actionBtn} style={{ background: '#6b5cff', color: '#fff', borderColor: '#6b5cff', cursor: 'pointer' }}>
-              <UploadCloud size={14} /> Upload New
-              <input type="file" multiple hidden onChange={handleFileUpload} />
-            </label>
+          <div className={styles.filesHeader}>
+            <h3>Shared Files ({files.length})</h3>
           </div>
+
+          <label className={styles.fileUpload}>
+            <UploadCloud size={32} />
+            <span>Click to upload or drag and drop</span>
+            <p>PDF, DOC, PNG or JPG (max. 10MB)</p>
+            <input type="file" multiple hidden onChange={handleFileUpload} />
+          </label>
 
           <div className={styles.filesList}>
             {files.map((f, i) => (
               <div key={i} className={styles.fileRow}>
                 <div className={styles.fileInfo}>
                   <div className={styles.fileIcon}>
-                    <FileText size={20} color="#6b5cff" />
+                    <FileText size={22} color="#6b5cff" />
                   </div>
-                  <span className={styles.fileName}>{f.file_name}</span>
+                  <div className={styles.fileName}>
+                    {f.file_name || f.name}
+                    <div className={styles.fileMeta}>
+                      {f.size || "1.2 MB"} • {f.created_at ? new Date(f.created_at).toLocaleDateString() : "Today"}
+                    </div>
+                  </div>
                 </div>
 
                 <div className={styles.fileActions}>
@@ -500,8 +433,8 @@ export default function Tasks() {
                     <button className={styles.downloadBtn}
                       onClick={async () => {
                         try {
-                          const res = await axios.get(
-                            `http://192.168.1.61:5000/api/files/${f.id}/download`,
+                          const res = await api.get(
+                            `/api/files/${f.id}/download`,
                             {
                               responseType: "blob",
                               headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -524,14 +457,9 @@ export default function Tasks() {
 
                   {f.id && (
                     <button className={styles.deleteBtn}
-                      onClick={async () => {
-                        try {
-                          await axios.delete(`http://192.168.1.61:5000/api/files/${f.id}`, {
-                            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-                          });
-                          setFiles(files.filter((_, index) => index !== i));
-                        } catch (err) {
-                          console.error("Failed to delete file", err);
+                      onClick={() => {
+                        if (window.confirm("Delete this file?")) {
+                          setFiles(files.filter(file => file.id !== f.id));
                         }
                       }}
                     >

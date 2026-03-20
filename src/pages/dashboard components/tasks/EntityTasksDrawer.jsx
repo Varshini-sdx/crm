@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { X, Plus, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./tasks.module.css";
@@ -16,10 +16,10 @@ export default function EntityTasksDrawer({ isOpen, onClose, entityType, entityI
             const token = localStorage.getItem("token");
             // Use lead or deal endpoint based on entityType
             const endpoint = entityType === 'lead'
-                ? `http://192.168.1.61:5000/api/leads/${entityId}/tasks`
-                : `http://192.168.1.61:5000/api/deals/${entityId}/tasks`;
+                ? "/api/leads/${entityId}/tasks"
+                : "/api/deals/${entityId}/tasks";
 
-            const res = await axios.get(endpoint, {
+            const res = await api.get(endpoint, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTasks(res.data.tasks || res.data);
@@ -41,7 +41,7 @@ export default function EntityTasksDrawer({ isOpen, onClose, entityType, entityI
         if (!newTaskTitle.trim()) return;
         try {
             const token = localStorage.getItem("token");
-            await axios.post(`http://192.168.1.61:5000/api/tasks`, {
+            await api.post("/api/tasks", {
                 title: newTaskTitle,
                 entity_type: entityType,
                 entity_id: entityId,
@@ -60,7 +60,7 @@ export default function EntityTasksDrawer({ isOpen, onClose, entityType, entityI
     const toggleTask = async (taskId) => {
         try {
             const token = localStorage.getItem("token");
-            await axios.put(`http://192.168.1.61:5000/api/tasks/${taskId}/complete`, {}, {
+            await api.put(`/api/tasks/${taskId}/complete`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchTasks();

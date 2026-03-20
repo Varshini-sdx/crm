@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import styles from "./calendar.module.css";
 
 export default function Calendar({ branch }) {
@@ -22,7 +22,7 @@ export default function Calendar({ branch }) {
   const fetchEvents = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://192.168.1.61:5000/api/calendar/events", {
+      const res = await api.get("/api/calendar/events", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEvents(res.data || []);
@@ -34,7 +34,7 @@ export default function Calendar({ branch }) {
   const fetchReminders = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://192.168.1.61:5000/api/reminders/today", {
+      const res = await api.get("/api/reminders/today", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReminders(res.data || []);
@@ -52,7 +52,7 @@ export default function Calendar({ branch }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const url = "http://192.168.1.61:5000/api/calendar/events";
+      const url = "/api/calendar/events";
 
       const payload = {
         ...formData,
@@ -61,7 +61,7 @@ export default function Calendar({ branch }) {
         remind_before_minutes: Number(formData.remind_before_minutes),
       };
 
-      await axios.post(url, payload, {
+      await api.post(url, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setShowModal(false);
@@ -86,7 +86,7 @@ export default function Calendar({ branch }) {
   const markReminderSent = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://192.168.1.61:5000/api/reminders/${id}/sent`, {}, {
+      await api.put(`/api/reminders/${id}/sent`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchReminders();

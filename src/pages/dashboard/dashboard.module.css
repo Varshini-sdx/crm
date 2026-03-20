@@ -1015,3 +1015,168 @@
 .logoutBtn:hover {
   background: #fef2f2;
 }
+
+/* ----- Mobile Responsive Styles ----- */
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hamburgerBtn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #1f2a44;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.hamburgerBtn:hover {
+  background: #f3f4f6;
+}
+
+.desktopIcons {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.mobileMoreActions {
+  display: none;
+  position: relative;
+}
+
+.moreActionsDropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  width: 160px;
+  padding: 0.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.moreActionsDropdown button {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.moreActionsDropdown button:hover {
+  background: #f7f6ff;
+  color: #6b5fd3;
+}
+
+.sidebarOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 31, 74, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1999;
+}
+
+.mobileCloseBtn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+}
+
+/* @media for tablets and mobile */
+@media (max-width: 768px) {
+  .sidebar {
+    left: -260px;
+    width: 260px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mobileSidebarVisible {
+    left: 0;
+  }
+
+  .sidebarCollapsed {
+    width: 260px; /* Reset on mobile to full width drawer */
+  }
+
+  .main {
+    margin-left: 0 !important;
+    padding: 0.5rem;
+  }
+
+  .collapsedLayout .main {
+    margin-left: 0 !important;
+  }
+
+  .workspace {
+    padding: 1.2rem;
+    border-radius: 20px;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .hamburgerBtn {
+    display: flex;
+  }
+
+  .desktopIcons {
+    display: none;
+  }
+
+  .mobileMoreActions {
+    display: block;
+  }
+
+  .mobileCloseBtn {
+    display: flex;
+  }
+
+  .sidebarBottom {
+    display: none; /* Hide collapse toggle on mobile */
+  }
+
+  .header {
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .workspace {
+    padding: 1rem 0.8rem;
+  }
+
+  .header h1 {
+    font-size: 1.1rem;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

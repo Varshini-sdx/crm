@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import styles from "./organisationSetup.module.css";
 import { useNavigate } from "react-router-dom";
 
@@ -70,8 +70,8 @@ export default function OrganisationSetup() {
         }
 
         try {
-            const response = await axios.post(
-                "http://192.168.1.61:5000/api/organization/setup",
+            const response = await api.post(
+                "/api/organization/setup",
                 payload,
                 {
                     headers: {

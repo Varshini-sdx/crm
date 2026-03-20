@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import styles from "./deals.module.css";
 import * as XLSX from "xlsx";
 import EntityTasksDrawer from "../tasks/EntityTasksDrawer";
@@ -111,7 +111,7 @@ export default function Deals({ branch }) {
       const headers = { Authorization: `Bearer ${token}` };
 
       // 1. Fetch Pipelines (Grouped Deals)
-      const pipelineRes = await axios.get("http://192.168.1.61:5000/api/deals/pipelines", { headers });
+      const pipelineRes = await api.get("/api/deals/pipelines", { headers });
       let pMap = pipelineRes.data || {};
 
       // 🌟 DUMMY DATA INJECTION 🌟
@@ -143,7 +143,7 @@ export default function Deals({ branch }) {
       }
 
       // 2. Fetch Analytics
-      const analyticsRes = await axios.get("http://192.168.1.61:5000/api/deals/analytics", { headers });
+      const analyticsRes = await api.get("/api/deals/analytics", { headers });
 
       // ✅ MERGE analytics safely
       const a = analyticsRes.data || {};
@@ -222,9 +222,9 @@ export default function Deals({ branch }) {
       const payload = { ...formData };
 
       if (isEditing && currentDealId) {
-        await axios.put(`http://192.168.1.61:5000/api/deals/${currentDealId}`, payload, { headers });
+        await api.put(`/api/deals/${currentDealId}`, payload, { headers });
       } else {
-        await axios.post("http://192.168.1.61:5000/api/deals", payload, { headers });
+        await api.post("/api/deals", payload, { headers });
       }
 
       setShowModal(false);
@@ -240,7 +240,7 @@ export default function Deals({ branch }) {
     if (!window.confirm("Are you sure you want to delete this deal?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://192.168.1.61:5000/api/deals/${id}`, {
+      await api.delete(`/api/deals/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();

@@ -69,7 +69,7 @@ const enterpriseRules = [
   }
 ];
 
-import axios from "axios";
+import api from "@/api/axios";
 
 
 
@@ -105,7 +105,7 @@ const AutomationHome = ({ branch }) => {
     try {
       setLoading(true);
       const branchId = branch?.id || 1;
-      const response = await axios.get(`http://192.168.1.61:5000/api/automation/rules?branchId=${branchId}`, {
+      const response = await api.get(`/api/automation/rules?branchId=${branchId}`, {
         headers: getAuthHeader()
       });
       // Ensure rules is always an array
@@ -129,7 +129,7 @@ const AutomationHome = ({ branch }) => {
   const toggleRule = async (rule) => {
     try {
       const newStatus = rule.status === "active" ? "paused" : "active";
-      await axios.patch(`http://192.168.1.61:5000/api/automation/rules/${rule.id}/status`, {
+      await api.patch(`/api/automation/rules/${rule.id}/status`, {
         status: newStatus
       }, {
         headers: getAuthHeader()
@@ -144,7 +144,7 @@ const AutomationHome = ({ branch }) => {
   const deleteRule = async (id) => {
     if (!window.confirm("Are you sure you want to delete this rule?")) return;
     try {
-      await axios.delete(`http://192.168.1.61:5000/api/automation/rules/${id}`, {
+      await api.delete(`/api/automation/rules/${id}`, {
         headers: getAuthHeader()
       });
       setRules(rules.filter(r => r.id !== id));
@@ -194,11 +194,11 @@ const AutomationHome = ({ branch }) => {
       };
 
       if (editingId) {
-        await axios.put(`http://192.168.1.61:5000/api/automation/rules/${editingId}`, payload, {
+        await api.put(`/api/automation/rules/${editingId}`, payload, {
           headers: getAuthHeader()
         });
       } else {
-        await axios.post(`http://192.168.1.61:5000/api/automation/rules`, payload, {
+        await api.post("/api/automation/rules", payload, {
           headers: getAuthHeader()
         });
       }

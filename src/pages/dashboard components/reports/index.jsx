@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import {
   Users,
   TrendingUp,
@@ -169,7 +169,7 @@ export default function Reports() {
   ]);
 
   // --- API FETCHING ---
-  const BASE_URL = "http://192.168.1.61:5000/api/analytics";
+  const BASE_URL = "/api/analytics";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -178,10 +178,10 @@ export default function Reports() {
         const headers = { Authorization: `Bearer ${token}` };
 
         const [kpiRes, revenueRes, pipelineRes, leadsRes] = await Promise.all([
-          axios.get(`${BASE_URL}/kpi`, { headers }).catch(() => null),
-          axios.get(`${BASE_URL}/revenue`, { headers }).catch(() => null),
-          axios.get(`${BASE_URL}/pipeline`, { headers }).catch(() => null),
-          axios.get(`${BASE_URL}/leads`, { headers }).catch(() => null),
+          api.get(`${BASE_URL}/kpi`, { headers }).catch(() => null),
+          api.get(`${BASE_URL}/revenue`, { headers }).catch(() => null),
+          api.get(`${BASE_URL}/pipeline`, { headers }).catch(() => null),
+          api.get(`${BASE_URL}/leads`, { headers }).catch(() => null),
         ]);
 
         if (kpiRes?.data) setSummaryData({ ...DUMMY_SUMMARY, ...kpiRes.data });

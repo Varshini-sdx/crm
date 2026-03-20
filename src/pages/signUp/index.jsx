@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./signUp.module.css";
 import signUpImg from "../../assets/signup_img.jpg";
+import api from "@/api/axios";
 
 
 export default function SignUp() {
@@ -18,27 +19,24 @@ export default function SignUp() {
         setLoading(true);
 
         try {
-            const res = await fetch("http://192.168.1.61:5000/auth/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email,
-                    password,
-                }),
+            const res = await api.post("/auth/signup", {
+                name,
+                email,
+                password,
             });
 
-            const data = await res.json();
+            console.log("SIGNUP RESPONSE:", res.data);
 
-            if (!res.ok) {
-                throw new Error(data.message || "Signup failed");
+            // Optional: Auto-login by storing token
+            if (res.data.token) {
+                localStorage.setItem("token", res.data.token);
             }
 
-            // Success → go to OTP page
-            navigate("/otp", { state: { email } });
+            // Immediately redirect back to login
+            navigate("/login");
         } catch (err) {
-            setError(err.message);
+            console.error("Signup error:", err);
+            setError(err.response?.data?.message || err.message || "Signup failed");
         } finally {
             setLoading(false);
         }

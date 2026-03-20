@@ -16,7 +16,7 @@ import {
     Clock,
     Users
 } from "lucide-react";
-import axios from "axios";
+import api from "@/api/axios";
 
 export const Profile = ({ branch }) => {
     const [activeTab, setActiveTab] = useState("personal");
@@ -50,7 +50,7 @@ export const Profile = ({ branch }) => {
     const fetchProfile = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await axios.get("http://192.168.1.61:5000/api/profile", {
+            const response = await api.get("/api/profile", {
                 headers: getAuthHeader()
             });
             const { user, organization } = response.data;

@@ -17,7 +17,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from "recharts";
-import axios from "axios";
+import api from "@/api/axios";
 
 const mockMarketingData = {
     kpis: {
@@ -72,7 +72,7 @@ export const Marketing = () => {
 
     const fetchMarketingData = useCallback(async () => {
         try {
-            const response = await axios.get("http://192.168.1.61:5000/api/marketing/analytics", {
+            const response = await api.get("/api/marketing/analytics", {
                 headers: getAuthHeader()
             });
 

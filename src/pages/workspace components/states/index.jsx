@@ -11,7 +11,7 @@ import {
     Globe
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import api from "@/api/axios";
 
 export const States = () => {
     const [states, setStates] = useState([]);
@@ -31,7 +31,7 @@ export const States = () => {
     const fetchStates = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await axios.get("http://192.168.1.61:5000/api/states", {
+            const response = await api.get("/api/states", {
                 headers: getAuthHeader()
             });
             setStates(response.data);

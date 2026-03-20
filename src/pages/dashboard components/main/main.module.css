@@ -370,6 +370,26 @@
   font-weight: 600;
 }
 
+/* Missed Activity Styles */
+.missedItem {
+  background: #fff5f5 !important;
+  border-left: 3px solid #ff4d4d;
+}
+
+.missedDot {
+  background: #ff4d4d !important;
+  box-shadow: 0 0 8px rgba(255, 77, 77, 0.4);
+}
+
+.missedTime {
+  color: #ff4d4d !important;
+}
+
+.missedText {
+  color: #c53030 !important;
+  font-weight: 500;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .growthGrid {
@@ -1110,3 +1130,82 @@
   padding:.4rem 0;
   border-bottom:1px dashed #eee;
 } */
+
+/* --- Dashboard Mobile Responsiveness --- */
+@media (max-width: 1200px) {
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .statsRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .kpiCard {
+    padding: 1.2rem;
+  }
+
+  .kpiValue {
+    font-size: 1.6rem;
+  }
+
+  .growthGrid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .revenueCard,
+  .todayCard {
+    padding: 1.2rem;
+  }
+
+  .statsRow {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+
+  .quickGrid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .quickCard {
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .mapGraphic {
+    min-height: 200px;
+  }
+
+  .mapGraphic svg {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .revenueChart {
+    height: 140px;
+  }
+
+  .todayItem {
+    grid-template-columns: 8px 40px 1fr;
+    padding: 0.5rem;
+  }
+
+  .time {
+    font-size: 0.65rem;
+  }
+}

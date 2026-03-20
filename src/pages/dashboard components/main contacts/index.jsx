@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import styles from "./mainContacts.module.css";
 import ContactProfile from "../contact profile";
 
@@ -39,15 +39,15 @@ export default function Contacts() {
     const fetchContacts = async () => {
         try {
             const token = localStorage.getItem("token");
-            let url = "http://192.168.1.61:5000/api/contacts";
+            let url = "/api/contacts";
 
             if (showDuplicatesOnly) {
-                url = "http://192.168.1.61:5000/api/contacts/duplicates";
+                url = "/api/contacts/duplicates";
             } else if (searchQuery) {
-                url = `http://192.168.1.61:5000/api/contacts/search?q=${searchQuery}`;
+                url = "/api/contacts/search?q=${searchQuery}";
             }
 
-            const res = await axios.get(url, {
+            const res = await api.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -171,14 +171,14 @@ export default function Contacts() {
                 // Update existing
                 const contactId = contacts[editIndex].id;
                 if (contactId) {
-                    await axios.put(`http://192.168.1.61:5000/api/contacts/${contactId}`, newContact, {
+                    await api.put(`/api/contacts/${contactId}`, newContact, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     fetchContacts();
                 }
             } else {
                 // Create new
-                await axios.post("http://192.168.1.61:5000/api/contacts", {
+                await api.post("/api/contacts", {
                     ...newContact,
                     owner: newContact.owner || "Unassigned",
                     lastContact: newContact.lastContact || "Just now",
@@ -210,7 +210,7 @@ export default function Contacts() {
             try {
                 const token = localStorage.getItem("token");
                 if (contact.id) {
-                    await axios.delete(`http://192.168.1.61:5000/api/contacts/${contact.id}`, {
+                    await api.delete(`/api/contacts/${contact.id}`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                 }
@@ -225,7 +225,7 @@ export default function Contacts() {
         if (c.id) {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get(`http://192.168.1.61:5000/api/contacts/${c.id}`, {
+                const res = await api.get(`/api/contacts/${c.id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setSelectedContact(res.data);
@@ -374,16 +374,16 @@ export default function Contacts() {
                                     className={styles.rowClickable}
                                     onClick={() => handleRowClick(c)}
                                 >
-                                    <td className={styles.contactCell}>
+                                    <td data-label="Contact" className={styles.contactCell}>
                                         <div className={styles.avatar}>{c.name?.[0]}</div>
                                         <span>{c.name}</span>
                                     </td>
-                                    <td>{c.company}</td>
-                                    <td>{c.email}</td>
-                                    <td>{c.phone}</td>
-                                    <td>{c.owner}</td>
-                                    <td>{c.lastContact}</td>
-                                    <td>
+                                    <td data-label="Company">{c.company}</td>
+                                    <td data-label="Email">{c.email}</td>
+                                    <td data-label="Phone">{c.phone}</td>
+                                    <td data-label="Owner">{c.owner}</td>
+                                    <td data-label="Last Contact">{c.lastContact}</td>
+                                    <td data-label="Status">
                                         <div className={styles.statusWrap}>
                                             <span
                                                 className={`${styles.status} ${styles[(c.status || "New").toLowerCase() + "_pill"]}`}
@@ -398,7 +398,7 @@ export default function Contacts() {
                                             )}
                                         </div>
                                     </td>
-                                    <td>
+                                    <td data-label="Actions">
                                         <div className={styles.actionCell}>
                                             <button
                                                 className={styles.iconBtn}

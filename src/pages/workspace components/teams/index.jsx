@@ -12,7 +12,7 @@ import {
     Clock,
     UserCheck
 } from "lucide-react";
-import axios from "axios";
+import api from "@/api/axios";
 
 const mockTeamData = [
     {
@@ -86,7 +86,7 @@ export const Team = ({ branch }) => {
 
     const fetchTeam = useCallback(async () => {
         try {
-            const response = await axios.get("http://192.168.1.61:5000/api/team", {
+            const response = await api.get("/api/team", {
                 headers: getAuthHeader()
             });
             const raw = response.data;
