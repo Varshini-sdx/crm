@@ -25,6 +25,7 @@ import {
     Edit3,
     Check
 } from "lucide-react";
+import ticketService from "@/api/ticketService";
 
 const statusConfig = {
     Open: { bg: "#dbeafe", color: "#1d4ed8", icon: AlertCircle },
@@ -101,6 +102,7 @@ export const TicketDetail = ({ ticket, onBack }) => {
     const [localPriority, setLocalPriority] = useState(ticket.priority);
     const [localAssignee, setLocalAssignee] = useState(ticket.assignee);
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const threadRef = useRef(null);
 
     // SLA timers  (first response ~82 min, resolution ~1210 min)
@@ -112,6 +114,46 @@ export const TicketDetail = ({ ticket, onBack }) => {
             threadRef.current.scrollTop = threadRef.current.scrollHeight;
         }
     }, [messages, notes, activeTab]);
+
+    const handleSaveUpdates = async () => {
+        if (!isEditing) {
+            setIsEditing(true);
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            const promises = [];
+            if (localStatus !== ticket.status) {
+                promises.push(ticketService.updateStatus(ticket.id, localStatus));
+            }
+            if (localAssignee !== ticket.assignee) {
+                promises.push(ticketService.assignTicket(ticket.id, localAssignee));
+            }
+
+            if (promises.length > 0) {
+                await Promise.all(promises);
+                alert("✅ Ticket updated successfully.");
+            }
+            setIsEditing(false);
+        } catch (err) {
+            console.error("❌ Ticket Detail Update Error:", err);
+            alert("Failed to update ticket.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleQuickStatusUpdate = async (newStatus) => {
+        try {
+            setLocalStatus(newStatus);
+            await ticketService.updateStatus(ticket.id, newStatus);
+            // Optional: alert or toast
+        } catch (err) {
+            alert("Failed to update status.");
+            setLocalStatus(ticket.status);
+        }
+    };
 
     const sendMessage = () => {
         if (!draft.trim()) return;
@@ -224,10 +266,11 @@ export const TicketDetail = ({ ticket, onBack }) => {
                             <div className={styles.panelTitle}>Ticket Info</div>
                             <button
                                 className={`${styles.editBtn} ${isEditing ? styles.saveBtnActive : ""}`}
-                                onClick={() => setIsEditing(!isEditing)}
+                                onClick={handleSaveUpdates}
+                                disabled={isSaving}
                             >
-                                {isEditing ? <Check size={14} /> : <Edit3 size={14} />}
-                                {isEditing ? "Save" : "Edit"}
+                                {isSaving ? <Check size={14} className={styles.spin} /> : (isEditing ? <Check size={14} /> : <Edit3 size={14} />)}
+                                {isSaving ? "Saving..." : (isEditing ? "Save" : "Edit")}
                             </button>
                         </div>
 
@@ -344,7 +387,7 @@ export const TicketDetail = ({ ticket, onBack }) => {
                                 <select
                                     className={styles.quickStatusSelect}
                                     value={localStatus}
-                                    onChange={e => setLocalStatus(e.target.value)}
+                                    onChange={e => handleQuickStatusUpdate(e.target.value)}
                                 >
                                     <option>Open</option>
                                     <option>In Progress</option>

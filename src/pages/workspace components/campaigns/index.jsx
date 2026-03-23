@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import api from "@/api/axios";
+import landingPageService from "@/api/landingPageService";
 import styles from "./campaigns.module.css";
 import CampaignBuilder from "./builder/CampaignBuilder";
 import {
@@ -91,90 +93,132 @@ export const Campaigns = ({ branch }) => {
 
     /* ================= LANDING PAGES ================= */
 
-    const [landingPages, setLandingPages] = useState(() => {
-        const defaultPages = [
-            {
-                id: 1,
-                name: "Diwali Offer Page",
-                slug: "diwali-offer",
-                campaign: "Diwali Email Blast",
-                status: "Published",
-                leads: 12,
-                conversion: "5.3%",
-            },
-        ];
+    const [landingPages, setLandingPages] = useState([]);
+    const [lpLoading, setLpLoading] = useState(false);
+    const [lpError, setLpError] = useState(null);
 
-        const saved = localStorage.getItem(LP_STORAGE_KEY);
-        return saved ? JSON.parse(saved) : defaultPages;
-    });
+    const fetchLandingPages = useCallback(async () => {
+        try {
+            setLpLoading(true);
+            const data = await landingPageService.getLandingPages();
+            setLandingPages(data);
+        } catch (error) {
+            console.error("Error fetching landing pages:", error);
+            setLpError("Failed to load landing pages");
+        } finally {
+            setLpLoading(false);
+        }
+    }, []);
+
+    const handleDeleteLanding = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this landing page?")) return;
+        try {
+            await landingPageService.deleteLandingPage(id);
+            setLandingPages(prev => prev.filter((lp) => lp.id !== id));
+            if (activeLanding?.id === id) {
+                setActiveLanding(null);
+            }
+        } catch (error) {
+            console.error("Error deleting landing page:", error);
+            alert("Failed to delete landing page");
+        }
+    };
+
+
+    // Load campaigns and stats from backend
+    const [campaigns, setCampaigns] = useState([]);
+    const [stats, setStats] = useState({ totalReach: 0, totalLeads: 0 });
+    const [loading, setLoading] = useState(true);
+
+    const getAuthHeader = () => {
+        const token = localStorage.getItem("token");
+        return token ? { Authorization: `Bearer ${token}` } : {};
+    };
+
+    const fetchCampaigns = useCallback(async () => {
+        try {
+            setLoading(true);
+            const branchId = branch?.id || 1;
+            const response = await api.get(`/api/campaigns?branchId=${branchId}`, {
+                headers: getAuthHeader()
+            });
+
+            const rawData = response.data;
+            const campaignList = Array.isArray(rawData) ? rawData : (rawData?.campaigns || []);
+
+            if (campaignList.length > 0) {
+                const mapped = campaignList.map(c => ({
+                    ...c,
+                    color: getColorForChannel(c.channel),
+                    month: c.month || currentMonth,
+                    year: c.year || currentYear
+                }));
+                setCampaigns(mapped);
+                console.log("%c[CAMPAIGNS] Loaded:", "color: #3b82f6; font-weight: bold;", mapped);
+            }
+        } catch (error) {
+            console.error("Error fetching campaigns:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [branch, currentMonth, currentYear]);
+
+    const fetchDashboard = useCallback(async () => {
+        try {
+            const response = await api.get("/api/campaign/dashboard", {
+                headers: getAuthHeader()
+            });
+            if (response.data) {
+                setStats(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching dashboard stats:", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCampaigns();
+        fetchDashboard();
+        fetchLandingPages();
+    }, [fetchCampaigns, fetchDashboard, fetchLandingPages]);
 
     const [activeLanding, setActiveLanding] = useState(null);
     const [activeLPTab, setActiveLPTab] = useState("overview");
     const editorRef = useRef(null);
 
-    const handleDeleteLanding = (id) => {
-        setLandingPages(landingPages.filter((lp) => lp.id !== id));
-        if (activeLanding?.id === id) {
-            setActiveLanding(null);
+    const handleCreateLandingPage = async () => {
+        const newPage = {
+            name: "New Landing Page",
+            slug: `page-${Date.now()}`,
+            campaign: "Not Connected",
+            status: "Draft",
+            leads: 0,
+            conversion: "0%",
+        };
+        try {
+            const created = await landingPageService.createLandingPage(newPage);
+            setLandingPages([...landingPages, created]);
+            setActiveLanding(created);
+            setTimeout(() => {
+                editorRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 100);
+        } catch (error) {
+            console.error("Error creating landing page:", error);
+            alert("Failed to create landing page");
         }
     };
 
-
-    // Load campaigns from localStorage on mount
-    const [campaigns, setCampaigns] = useState(() => {
-        const defaultCampaigns = [
-            {
-                id: 1,
-                name: "Diwali Email Blast",
-                channel: "Email",
-                status: "Running",
-                color: "blue",
-                month: 2, // February
-                year: 2026,
-            },
-            {
-                id: 2,
-                name: "VIP WhatsApp Outreach",
-                channel: "WhatsApp",
-                status: "Scheduled",
-                color: "green",
-                month: 2, // February
-                year: 2026,
-            },
-            {
-                id: 3,
-                name: "Instagram Promo",
-                channel: "Social",
-                status: "Draft",
-                color: "pink",
-                month: 2, // February
-                year: 2026,
-            },
-        ];
-
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            const savedCampaigns = JSON.parse(saved);
-            // Check if defaults already exist in saved campaigns
-            const hasDefaults = savedCampaigns.some(c => c.id === 1 || c.id === 2 || c.id === 3);
-            if (hasDefaults) {
-                return savedCampaigns;
-            }
-            // Merge defaults with saved campaigns
-            return [...defaultCampaigns, ...savedCampaigns];
+    const handleSaveLandingChanges = async () => {
+        if (!activeLanding) return;
+        try {
+            const updated = await landingPageService.updateLandingPage(activeLanding.id, activeLanding);
+            setLandingPages(prev => prev.map((lp) => (lp.id === updated.id ? updated : lp)));
+            alert("Landing page updated successfully!");
+        } catch (error) {
+            console.error("Error updating landing page:", error);
+            alert("Failed to update landing page");
         }
-        return defaultCampaigns;
-    });
-
-    // Save campaigns to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(campaigns));
-    }, [campaigns]);
-
-    // Save landing pages to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem(LP_STORAGE_KEY, JSON.stringify(landingPages));
-    }, [landingPages]);
+    };
 
     /* ---------------- CREATE CAMPAIGN ---------------- */
     const openCreateModal = () => {
@@ -193,23 +237,32 @@ export const Campaigns = ({ branch }) => {
         });
     };
 
-    const handleCreateCampaign = () => {
+    const handleCreateCampaign = async () => {
         if (!createFormData.name.trim()) {
             alert("Please enter a campaign name");
             return;
         }
-        const newCampaign = {
-            id: Date.now(),
-            name: createFormData.name,
-            channel: createFormData.channel,
-            status: createFormData.status,
-            color: getColorForChannel(createFormData.channel),
-            month: createFormData.month,
-            year: createFormData.year,
-            whatsappConfig: createFormData.channel === "WhatsApp" ? whatsappConfig : null,
-        };
-        setCampaigns([newCampaign, ...campaigns]);
-        setIsCreating(false);
+        try {
+            const payload = {
+                name: createFormData.name,
+                channel: createFormData.channel,
+                status: createFormData.status,
+                month: createFormData.month,
+                year: createFormData.year,
+                branch_id: branch?.id || 1,
+                whatsappConfig: createFormData.channel === "WhatsApp" ? whatsappConfig : null,
+            };
+
+            await api.post("/api/campaign/create", payload, {
+                headers: getAuthHeader()
+            });
+
+            await fetchCampaigns();
+            setIsCreating(false);
+        } catch (error) {
+            console.error("Error creating campaign:", error);
+            alert("Failed to create campaign");
+        }
     };
 
     const handleCancelCreate = () => {
@@ -218,27 +271,41 @@ export const Campaigns = ({ branch }) => {
     };
 
     /* ---------------- PLAY / PAUSE ---------------- */
-    const startCampaign = (id) => {
-        setCampaigns((prev) =>
-            prev.map((c) =>
-                c.id === id ? { ...c, status: "Running" } : c
-            )
-        );
+    const startCampaign = async (id) => {
+        try {
+            await api.put(`/api/campaign/update/${id}`, { status: "Running" }, {
+                headers: getAuthHeader()
+            });
+            setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: "Running" } : c));
+        } catch (error) {
+            console.error("Error starting campaign:", error);
+        }
     };
 
-    const pauseCampaign = (id) => {
-        setCampaigns((prev) =>
-            prev.map((c) =>
-                c.id === id ? { ...c, status: "Paused" } : c
-            )
-        );
+    const pauseCampaign = async (id) => {
+        try {
+            await api.put(`/api/campaign/update/${id}`, { status: "Paused" }, {
+                headers: getAuthHeader()
+            });
+            setCampaigns(prev => prev.map(c => c.id === id ? { ...c, status: "Paused" } : c));
+        } catch (error) {
+            console.error("Error pausing campaign:", error);
+        }
     };
 
     /*------- delete/edit ----------- */
 
-    const handleDeleteCampaign = (id) => {
+    const handleDeleteCampaign = async (id) => {
         if (window.confirm("Are you sure you want to delete this campaign?")) {
-            setCampaigns(prev => prev.filter(c => c.id !== id));
+            try {
+                await api.delete(`/api/campaign/delete/${id}`, {
+                    headers: getAuthHeader()
+                });
+                setCampaigns(prev => prev.filter(c => c.id !== id));
+            } catch (error) {
+                console.error("Error deleting campaign:", error);
+                alert("Failed to delete campaign");
+            }
         }
     };
 
@@ -315,28 +382,31 @@ export const Campaigns = ({ branch }) => {
         setEditingCampaign(null); // Close edit modal if opening builder
     };
 
-    const handleSaveEdit = () => {
+    const handleSaveEdit = async () => {
         if (!editFormData.name.trim()) {
             alert("Please enter a campaign name");
             return;
         }
-        setCampaigns(prev =>
-            prev.map(c =>
-                c.id === editingCampaign.id
-                    ? {
-                        ...c,
-                        name: editFormData.name,
-                        channel: editFormData.channel,
-                        color: getColorForChannel(editFormData.channel),
-                        month: editFormData.month,
-                        year: editFormData.year,
-                        whatsappConfig: editFormData.channel === "WhatsApp" ? whatsappConfig : c.whatsappConfig,
-                        config: editFormData.channel !== "WhatsApp" ? campaignConfig : c.config,
-                    }
-                    : c
-            )
-        );
-        setEditingCampaign(null);
+        try {
+            const payload = {
+                name: editFormData.name,
+                channel: editFormData.channel,
+                month: editFormData.month,
+                year: editFormData.year,
+                whatsappConfig: editFormData.channel === "WhatsApp" ? whatsappConfig : null,
+                config: editFormData.channel !== "WhatsApp" ? campaignConfig : null,
+            };
+
+            await api.put(`/api/campaign/update/${editingCampaign.id}`, payload, {
+                headers: getAuthHeader()
+            });
+
+            await fetchCampaigns();
+            setEditingCampaign(null);
+        } catch (error) {
+            console.error("Error updating campaign:", error);
+            alert("Failed to update campaign");
+        }
     };
 
     const handleCancelEdit = () => {
@@ -1018,71 +1088,64 @@ export const Campaigns = ({ branch }) => {
                 <h2>Landing Pages</h2>
                 <button
                     className={styles.primaryBtn}
-                    onClick={() => {
-                        const newPage = {
-                            id: Date.now(),
-                            name: "New Landing Page",
-                            slug: "new-page",
-                            campaign: "Not Connected",
-                            status: "Draft",
-                            leads: 0,
-                            conversion: "0%",
-                        };
-                        setLandingPages([...landingPages, newPage]);
-                        setActiveLanding(newPage);
-                        setTimeout(() => {
-                            editorRef.current?.scrollIntoView({ behavior: "smooth" });
-                        }, 100);
-                    }}
+                    onClick={handleCreateLandingPage}
                 >
                     + Create Landing Page
                 </button>
             </div>
 
             <div className={styles.landingGrid}>
-                {landingPages.map((page) => (
-                    <div
-                        key={page.id}
-                        className={styles.landingCard}
-                        onClick={() => {
-                            setActiveLanding(page);
-                            setTimeout(() => {
-                                editorRef.current?.scrollIntoView({ behavior: "smooth" });
-                            }, 100);
-                        }}
-                    >
-                        <div className={styles.lpCardHeader}>
-                            <h4>{page.name}</h4>
-                            <div className={styles.lpCardActions}>
-                                <button
-                                    className={styles.lpEditBtn}
-                                    title="Edit Page"
-                                >
-                                    <Edit2 size={14} />
-                                </button>
-                                <button
-                                    className={styles.lpDeleteBtn}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteLanding(page.id);
-                                    }}
-                                    title="Delete Page"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
+                {lpLoading ? (
+                    <div className={styles.lpLoading}>Loading landing pages...</div>
+                ) : lpError ? (
+                    <div className={styles.lpError}>{lpError}</div>
+                ) : landingPages.length === 0 ? (
+                    <div className={styles.lpEmpty}>No landing pages found.</div>
+                ) : (
+                    landingPages.map((page) => (
+                        <div
+                            key={page.id}
+                            className={styles.landingCard}
+                            onClick={() => {
+                                setActiveLanding(page);
+                                setTimeout(() => {
+                                    editorRef.current?.scrollIntoView({ behavior: "smooth" });
+                                }, 100);
+                            }}
+                        >
+                            <div className={styles.lpCardHeader}>
+                                <h4>{page.name}</h4>
+                                <div className={styles.lpCardActions}>
+                                    <button
+                                        className={styles.lpEditBtn}
+                                        title="Edit Page"
+                                    >
+                                        <Edit2 size={14} />
+                                    </button>
+                                    <button
+                                        className={styles.lpDeleteBtn}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteLanding(page.id);
+                                        }}
+                                        title="Delete Page"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                            <p>/{page.slug}</p>
+                            <span className={`${styles.status} ${page.status === "Published" ? styles.statusPublished : styles.statusDraft}`}>
+                                {page.status}
+                            </span>
+
+                            <div className={styles.metrics}>
+                                <span>Leads: {page.leads}</span>
+                                <span>Conv: {page.conversion}</span>
                             </div>
                         </div>
-                        <p>/{page.slug}</p>
-                        <span className={`${styles.status} ${page.status === "Published" ? styles.statusPublished : styles.statusDraft}`}>
-                            {page.status}
-                        </span>
-
-                        <div className={styles.metrics}>
-                            <span>Leads: {page.leads}</span>
-                            <span>Conv: {page.conversion}</span>
-                        </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* FULL WIDTH EXPANDABLE EDITOR */}
@@ -1188,25 +1251,25 @@ export const Campaigns = ({ branch }) => {
                     <div className={styles.editorActions}>
                         <button
                             className={styles.saveBtn}
-                            onClick={() => {
-                                setLandingPages(
-                                    landingPages.map((lp) =>
-                                        lp.id === activeLanding.id ? activeLanding : lp
-                                    )
-                                );
-                            }}
+                            onClick={handleSaveLandingChanges}
                         >
                             Save Changes
                         </button>
 
                         <button
                             className={styles.publishBtn}
-                            onClick={() =>
-                                setActiveLanding({
-                                    ...activeLanding,
-                                    status: "Published",
-                                })
-                            }
+                            onClick={async () => {
+                                const updated = { ...activeLanding, status: "Published" };
+                                setActiveLanding(updated);
+                                try {
+                                    const saved = await landingPageService.updateLandingPage(updated.id, updated);
+                                    setLandingPages(prev => prev.map((lp) => (lp.id === saved.id ? saved : lp)));
+                                    alert("Landing page published successfully!");
+                                } catch (error) {
+                                    console.error("Error publishing landing page:", error);
+                                    alert("Failed to publish landing page");
+                                }
+                            }}
                         >
                             Publish
                         </button>

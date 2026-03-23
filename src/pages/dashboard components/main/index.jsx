@@ -21,6 +21,7 @@ import { PieChart as PieIcon, ListChecks, CheckCircle2, UserPlus, Calendar as Ca
 import CustomerMap from "./CustomerMap";
 
 export default function Main({ active, branch, setActive }) {
+    console.log("Main rendering! active tab is:", active);
 
     const DUMMY_SUMMARY = {
         total_leads: 128,
@@ -91,50 +92,53 @@ export default function Main({ active, branch, setActive }) {
             const fetchDashboard = async () => {
                 try {
                     const token = localStorage.getItem("token");
-                    const headers = { Authorization: `Bearer ${token}` };
-
-                    const [resSummary, resRevenue, resTasks, resLeadsStatus, resRecentActivities, resDealsGrowth] = await Promise.all([
-                        api.get(`/dashboard/summary`, { headers }).catch(() => ({ data: null })),
-                        api.get(`/dashboard/total-revenue`, { headers }).catch(() => ({ data: null })),
-                        api.get(`/api/reminders/today`, { headers }).catch(() => ({ data: null })),
-                        api.get(`/dashboard/leads-status`, { headers }).catch(() => ({ data: null })),
-                        api.get(`/dashboard/recent-activity`, { headers }).catch(() => ({ data: null })),
-                        api.get(`/dashboard/deals-growth`, { headers }).catch(() => ({ data: null }))
+                    const headers = { Authorization: `Bearer ${token}` }; const [resSummary, resRevenue, resTasks, resLeadsStatus, resRecentActivities, resDealsGrowth] = await Promise.all([
+                        api.get(`/api/dashboard/summary`, { headers }).catch(err => { console.error("Summary FULL ERROR:", err.response?.data || err); throw err; }),
+                        api.get(`/api/dashboard/total-revenue`, { headers }).catch(err => { console.error("Revenue FULL ERROR:", err.response?.data || err); throw err; }),
+                        api.get(`/api/reminders/today`, { headers }).catch(err => { console.error("Tasks FULL ERROR:", err.response?.data || err); throw err; }),
+                        api.get(`/api/dashboard/leads-status`, { headers }).catch(err => { console.error("Leads status FULL ERROR:", err.response?.data || err); throw err; }),
+                        api.get(`/api/dashboard/recent-activity`, { headers }).catch(err => { console.error("Activities FULL ERROR:", err.response?.data || err); throw err; }),
+                        api.get(`/api/dashboard/deals-growth`, { headers }).catch(err => { console.error("Deals growth FULL ERROR:", err.response?.data || err); throw err; })
                     ]);
 
+                    console.log("SUMMARY RAW RESPONSE:", resSummary?.data);
                     if (resSummary?.data) {
-                        setSummary({
-                            total_leads: resSummary.data.total_leads || summary.total_leads,
-                            leads_growth: resSummary.data.leads_growth || summary.leads_growth,
-                            active_deals: resSummary.data.active_deals || summary.active_deals,
-                            deals_progress: resSummary.data.deals_progress || summary.deals_progress,
-                            revenue: resSummary.data.revenue || summary.revenue,
-                            revenue_period: resSummary.data.revenue_period || summary.revenue_period,
-                            tasks_due: resSummary.data.tasks_due || summary.tasks_due,
-                            tasks_overdue: resSummary.data.tasks_overdue || summary.tasks_overdue,
-                        });
-                    }
-
-                    // Handle Deals Growth Response
-                    if (resDealsGrowth?.data) {
                         setSummary(prev => ({
                             ...prev,
-                            active_deals: resDealsGrowth.data.active_deals || prev.active_deals,
-                            deals_progress: resDealsGrowth.data.deals_growth || resDealsGrowth.data.deals_progress || prev.deals_progress
+                            total_leads: resSummary.data.total_leads ?? prev.total_leads,
+                            leads_growth: resSummary.data.leads_growth ?? prev.leads_growth,
+                            active_deals: resSummary.data.active_deals ?? prev.active_deals,
+                            deals_progress: resSummary.data.deals_progress ?? prev.deals_progress,
+                            revenue: resSummary.data.revenue ?? prev.revenue,
+                            revenue_period: resSummary.data.revenue_period ?? prev.revenue_period,
+                            tasks_due: resSummary.data.tasks_due ?? prev.tasks_due,
+                            tasks_overdue: resSummary.data.tasks_overdue ?? prev.tasks_overdue,
                         }));
                     }
 
-                    // Directly update the revenue KPI data if the endpoint returns { total_revenue: ... }
+                    console.log("DEALS GROWTH RAW RESPONSE:", resDealsGrowth?.data);
+                    if (resDealsGrowth?.data) {
+                        setSummary(prev => ({
+                            ...prev,
+                            active_deals: resDealsGrowth.data.active_deals ?? resDealsGrowth.data.count ?? prev.active_deals,
+                            deals_progress: resDealsGrowth.data.deals_growth ?? resDealsGrowth.data.growth ?? resDealsGrowth.data.deals_progress ?? prev.deals_progress
+                        }));
+                    }
+
+                    console.log("TOTAL REVENUE RAW RESPONSE:", resRevenue?.data);
                     if (resRevenue?.data) {
-                        if (resRevenue.data.total_revenue !== undefined) {
+                        // Check for total_revenue KPI field
+                        const totalRevenue = resRevenue.data.total_revenue ?? resRevenue.data.total;
+                        if (totalRevenue !== undefined && totalRevenue !== null) {
                             setSummary(prev => ({
                                 ...prev,
-                                revenue: `₹${Number(resRevenue.data.total_revenue).toLocaleString()}`
+                                revenue: `₹${Number(totalRevenue).toLocaleString()}`
                             }));
                         }
 
-                        // If it ALSO contains an array we update the big chart
-                        let revenueArr = Array.isArray(resRevenue.data) ? resRevenue.data : (resRevenue.data.data || resRevenue.data.revenue || resRevenue.data.monthly_revenue || null);
+                        // Handle monthly chart data
+                        let rawRevData = resRevenue.data;
+                        let revenueArr = Array.isArray(rawRevData) ? rawRevData : (rawRevData.data || rawRevData.revenue || rawRevData.monthly_revenue || rawRevData.chart || null);
                         if (Array.isArray(revenueArr) && revenueArr.length > 0) {
                             setRevenueData(processRevenue(revenueArr));
                         }
@@ -145,8 +149,8 @@ export default function Main({ active, branch, setActive }) {
                     }
 
                     console.log("LEADS STATUS RAW RESPONSE:", resLeadsStatus?.data);
-                    // Handle nested arrays like { status: [...] } or just [...]
-                    let leadsData = Array.isArray(resLeadsStatus?.data) ? resLeadsStatus.data : (resLeadsStatus?.data?.data || resLeadsStatus?.data?.leads || resLeadsStatus?.data?.status || null);
+                    const rawLeadsData = resLeadsStatus?.data;
+                    let leadsData = Array.isArray(rawLeadsData) ? rawLeadsData : (rawLeadsData?.data || rawLeadsData?.leads || rawLeadsData?.status || null);
 
                     if (Array.isArray(leadsData) && leadsData.length > 0) {
                         const defaultColors = [
@@ -157,8 +161,8 @@ export default function Main({ active, branch, setActive }) {
                         ];
                         const enrichedStatus = leadsData.map((item, index) => ({
                             ...item,
-                            name: item.name || item.status || item._id || "Unknown",
-                            value: item.value || item.count || 0,
+                            name: item.name ?? item.status ?? item._id ?? "Unknown",
+                            value: item.value ?? item.count ?? 0,
                             color: defaultColors[index % defaultColors.length].color,
                             grad: defaultColors[index % defaultColors.length].grad
                         }));
@@ -166,10 +170,12 @@ export default function Main({ active, branch, setActive }) {
                     }
 
                     console.log("RECENT ACTIVITIES RAW RESPONSE:", resRecentActivities?.data);
-                    let activitiesData = Array.isArray(resRecentActivities?.data) ? resRecentActivities.data : (resRecentActivities?.data?.data || resRecentActivities?.data?.activities || null);
+                    const rawActivities = resRecentActivities?.data;
+                    let activitiesData = Array.isArray(rawActivities) ? rawActivities : (rawActivities?.data || rawActivities?.activities || null);
 
                     if (Array.isArray(activitiesData) && activitiesData.length > 0) {
                         const mappedActivities = activitiesData.map((act, index) => {
+                            if (!act) return null;
                             let icon = <CheckCircle2 size={14} />;
                             let color = "#3bbfa0";
                             if (act.type === "lead" || act.title?.toLowerCase().includes("lead")) {
@@ -179,8 +185,16 @@ export default function Main({ active, branch, setActive }) {
                             } else if (act.type === "meeting" || act.title?.toLowerCase().includes("meeting")) {
                                 icon = <CalIcon size={14} />; color = "#ff8fa3";
                             }
-                            return { ...act, id: act.id || index, icon, color, time: act.time || act.created_at || "Just now" };
-                        });
+                            return {
+                                ...act,
+                                id: act.id ?? act._id ?? index,
+                                icon,
+                                color,
+                                time: act.time ?? act.created_at ?? "Just now",
+                                title: act.title ?? "Activity",
+                                desc: act.desc ?? act.description ?? ""
+                            };
+                        }).filter(Boolean);
                         setRecentActivities(mappedActivities.slice(0, 10)); // keep UI clean
                     }
 
@@ -418,12 +432,8 @@ export default function Main({ active, branch, setActive }) {
                 </>
             );
 
-
-            {/* ------------   Leads   ---------------- */ }
-
-
-
         case "Leads":
+            console.log("Main rendering Leads tab");
             return (
                 <>
                     <Leads branch={branch} />

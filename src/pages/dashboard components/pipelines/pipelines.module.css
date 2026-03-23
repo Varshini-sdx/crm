@@ -1,7 +1,7 @@
 .pipelinesPage {
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
+    gap: 1rem;
     padding: 1.5rem 0;
 }
 
@@ -9,6 +9,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 0.5rem;
+    /* Tighten space to kanban */
+    margin-top: 2.5rem;
+    /* Add space from insights row */
 }
 
 .pipelineHeader h2 {
@@ -37,6 +41,40 @@
     background: #5a4deb;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(107, 92, 255, 0.3);
+}
+
+/* ---------- Pipeline Tabs (Pills) ---------- */
+.pipelineTabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 0.5rem;
+    /* Add clear space to Kanban board below */
+    margin-top: 1rem;
+}
+
+.pipelineTab {
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    background: #ffffff;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pipelineTab:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.activeTab {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #1e293b;
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.15);
 }
 
 /* ---------- Insights Row (Automation & Forecast) ---------- */
@@ -519,4 +557,406 @@
     width: 100%;
     height: 4px;
     border-radius: 24px 24px 0 0;
+}
+/* ---------- Leads Pipeline Funnel ---------- */
+.leadsFunnelSection {
+    background: #ffffff;
+    border-radius: 28px;
+    padding: 2.2rem;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.funnelTitleGroup h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+}
+
+.funnelTitleGroup p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 4px 0 0;
+}
+
+.funnelContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 1rem 0;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.funnelStageRow {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 2rem;
+}
+
+.stageDescriptionLeft {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.stageDescriptionLeft strong {
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.stageDescriptionLeft span {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.funnelShapeWrapper {
+    width: 400px;
+    display: flex;
+    justify-content: center;
+}
+
+.funnelTrapezoid {
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    clip-path: polygon(8% 0, 92% 0, 100% 100%, 0% 100%);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.funnelValue {
+    color: white;
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stageMetaRight {
+    flex: 1;
+}
+
+.conversionBadge {
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-block;
+}
+
+/* Responsive Override */
+@media (max-width: 1200px) {
+    .funnelStageRow {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    .stageDescriptionLeft {
+        align-items: center;
+        text-align: center;
+    }
+    .funnelShapeWrapper {
+        width: 100%;
+    }
+}
+
+/* ---------- Deal Detail Modal ---------- */
+.detailModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.detailModalContent {
+    background: #ffffff;
+    width: 850px;
+    height: 600px;
+    border-radius: 32px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.detailModalHeader {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+}
+
+.headerTitle h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.companyBadge {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.detailModalBody {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.detailSidebar {
+    width: 200px;
+    background: #f8fafc;
+    border-right: 1px solid #f1f5f9;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detailTab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: none;
+    background: none;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: left;
+}
+
+.activeDetailTab {
+    background: #ffffff;
+    color: #6b5cff;
+    box-shadow: 0 4px 12px rgba(107, 92, 255, 0.1);
+}
+
+.detailContent {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+/* General Tab */
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.infoItem label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.bigValue {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #059669;
+    margin: 0;
+}
+
+/* Notes Tab */
+.noteInputWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 2rem;
+}
+
+.noteInputWrapper textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 16px;
+    background: #f8fafc;
+    min-height: 80px;
+    resize: none;
+}
+
+.saveNoteBtn {
+    align-self: flex-end;
+    background: #6b5cff;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.notesList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.noteCard {
+    background: #f8fafc;
+    padding: 1.2rem;
+    border-radius: 18px;
+    border: 1px solid #f1f5f9;
+}
+
+.noteMeta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Files Tab */
+.uploadArea {
+    border: 2px dashed #e2e8f0;
+    padding: 2.5rem;
+    text-align: center;
+    border-radius: 20px;
+    background: #f8fafc;
+    color: #64748b;
+    margin-bottom: 2rem;
+    cursor: pointer;
+    position: relative;
+}
+
+.hiddenInput {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.filesList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fileCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 16px;
+}
+
+.fileInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fileIcon {
+    width: 40px;
+    height: 40px;
+    background: #eff6ff;
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 800;
+}
+
+.fileInfo strong {
+    display: block;
+    font-size: 0.85rem;
+    color: #1e293b;
+}
+
+.fileInfo span {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.fileActions {
+    display: flex;
+    gap: 8px;
+}
+
+.fileActions button {
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fileActions button:hover {
+    background: #ffffff;
+    color: #6b5cff;
+    border-color: #6b5cff;
+}
+
+.closeBtn {
+    border: none;
+    background: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.closeBtn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.statusBadge {
+    background: #dcfce7;
+    color: #16a34a;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }

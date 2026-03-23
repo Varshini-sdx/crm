@@ -15,9 +15,10 @@ import {
     Tag,
     User,
     MoreVertical,
-    TrendingUp
+    TrendingUp,
+    Loader2
 } from "lucide-react";
-import api from "@/api/axios";
+import ticketService from "@/api/ticketService";
 
 const mockTickets = [
     {
@@ -132,7 +133,9 @@ const categoryColors = {
 };
 
 export const SupportTickets = () => {
-    const [tickets, setTickets] = useState(mockTickets);
+    const [tickets, setTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [priorityFilter, setPriorityFilter] = useState("All");
@@ -140,26 +143,20 @@ export const SupportTickets = () => {
     const [newTicket, setNewTicket] = useState({ title: "", description: "", priority: "Medium", category: "Bug" });
     const [selectedTicket, setSelectedTicket] = useState(null);
 
-    const getAuthHeader = () => {
-        const token = localStorage.getItem("token");
-        return token ? { Authorization: `Bearer ${token}` } : {};
-    };
-
     const fetchTickets = useCallback(async () => {
         try {
-            const response = await api.get("/api/support-tickets", {
-                headers: getAuthHeader()
-            });
-            const raw = response.data;
-            const data = Array.isArray(raw) ? raw : Array.isArray(raw?.tickets) ? raw.tickets : null;
-            if (data && data.length > 0) {
-                setTickets(data);
-                console.log("✅ Support Tickets: loaded live data from backend.");
-            } else {
-                console.warn("⚠️ Support Tickets: backend not connected – showing demo data.");
-            }
-        } catch (error) {
-            console.warn("⚠️ Support Tickets: backend not connected – showing demo data.", error.message);
+            setLoading(true);
+            const data = await ticketService.getTickets();
+            const formatted = Array.isArray(data) ? data : (data?.tickets || data?.data || []);
+            setTickets(formatted);
+            setError(null);
+        } catch (err) {
+            console.error("❌ Support Tickets Fetch Error:", err);
+            // Fallback to mock data if backend not connected, but set an error flag
+            setTickets(mockTickets);
+            setError("Couldn't sync with live server. Displaying demo data.");
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -184,22 +181,26 @@ export const SupportTickets = () => {
         resolved: tickets.filter(t => t.status === "Resolved" || t.status === "Closed").length
     };
 
-    const handleSubmitTicket = (e) => {
+    const handleSubmitTicket = async (e) => {
         e.preventDefault();
-        const created = {
-            id: `TKT-00${tickets.length + 1}`,
-            ...newTicket,
-            status: "Open",
-            assignee: "Unassigned",
-            submittedBy: "You",
-            createdAt: "Just now",
-            updatedAt: "Just now",
-            responses: 0
-        };
-        setTickets([created, ...tickets]);
-        setShowNewModal(false);
-        setNewTicket({ title: "", description: "", priority: "Medium", category: "Bug" });
+        try {
+            const created = await ticketService.createTicket(newTicket);
+            setTickets([created, ...tickets]);
+            setShowNewModal(false);
+            setNewTicket({ title: "", description: "", priority: "Medium", category: "Bug" });
+        } catch (err) {
+            alert("Failed to raise ticket. Please try again.");
+        }
     };
+
+    if (loading) {
+        return (
+            <div className={styles.loadingState}>
+                <Loader2 className={styles.spinner} size={48} />
+                <p>Retrieving tickets...</p>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.page}>

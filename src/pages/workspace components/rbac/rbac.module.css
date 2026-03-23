@@ -630,6 +630,72 @@
     flex-shrink: 0;
 }
 
+/* NEW USER HIGHLIGHT */
+.newUserHighlight {
+    background: #ecfdf5;
+    border: 1px solid #10b98130;
+    border-radius: 12px;
+    padding: 2px;
+    margin-bottom: 8px;
+}
+
+.newUserHighlight .userRow:hover {
+    background: #d1fae5;
+}
+
+.newUserHighlight .userSelected {
+    background: #10b98115 !important;
+}
+
+.userDetails {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.userEmail {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.sectionLabel {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 10px 4px;
+}
+
+/* MANUAL USER INPUT */
+.manualUserInput {
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.inputGroup {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.addBtn {
+    padding: 8px 16px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.addBtn:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+}
+
 .assignedChips {
     display: flex;
     flex-wrap: wrap;

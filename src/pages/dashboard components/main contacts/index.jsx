@@ -31,7 +31,7 @@ export default function Contacts() {
         email: "",
         phone: "",
         owner: "",
-        lastContact: "",
+        last_contact: "",
         status: "New",
     });
 
@@ -44,25 +44,24 @@ export default function Contacts() {
             if (showDuplicatesOnly) {
                 url = "/api/contacts/duplicates";
             } else if (searchQuery) {
-                url = "/api/contacts/search?q=${searchQuery}";
+                url = `/api/contacts/search?q=${searchQuery}`;
             }
 
+            console.log(`FETCHING CONTACTS FROM: ${url}`);
             const res = await api.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            console.log("CONTACTS LIST RAW RESPONSE:", res.data);
 
-            let data = Array.isArray(res.data) ? res.data : [];
+            let data = Array.isArray(res.data) ? res.data : (res.data?.contacts || res.data?.data || []);
 
-            // 🌟 DUMMY DATA INJECTION 🌟
-            if (data.length === 0 && !searchQuery && !showDuplicatesOnly) {
-                data = [
-                    { id: 1, name: "Amit Patel", company: "Reliance Ind", email: "amit@reliance.com", phone: "+91 98765 43210", owner: "Varshini", lastContact: "2 hours ago", status: "Active" },
-                    { id: 2, name: "Sneha Reddy", company: "TCS", email: "sneha.r@tcs.com", phone: "+91 87654 32109", owner: "Ravi", lastContact: "Yesterday", status: "New" },
-                    { id: 3, name: "John Smith", company: "Z-Tech Solutions", email: "jsmith@ztech.io", phone: "+1 415 555 0199", owner: "Anu", lastContact: "3 days ago", status: "Active" },
-                    { id: 4, name: "Priya Sharma", company: "Infosys", email: "priya@infosys.com", phone: "+91 76543 21098", owner: "Varshini", lastContact: "1 week ago", status: "Inactive" },
-                    { id: 5, name: "David Miller", company: "Miller Co", email: "david@miller.co", phone: "+44 20 7946 0958", owner: "Ravi", lastContact: "Just now", status: "Active" }
-                ];
-            }
+            // Normalize data: backend uses snake_case last_contact, but console shows lastContact
+            data = data.map(c => ({
+                ...c,
+                id: c.id ?? c._id,
+                owner: (typeof c.owner === 'object' ? c.owner?.name : c.owner) || "Unassigned",
+                last_contact: c.last_contact || c.lastContact || "Never"
+            }));
 
             setContacts(data);
         } catch (err) {
@@ -144,7 +143,7 @@ export default function Contacts() {
                         email: values[2]?.trim(),
                         phone: values[3]?.trim(),
                         owner: values[4]?.trim() || "Unassigned",
-                        lastContact: "Just now",
+                        last_contact: "Just now",
                         status: values[6]?.trim() || "New",
                     };
                 })
@@ -181,7 +180,7 @@ export default function Contacts() {
                 await api.post("/api/contacts", {
                     ...newContact,
                     owner: newContact.owner || "Unassigned",
-                    lastContact: newContact.lastContact || "Just now",
+                    last_contact: newContact.last_contact || "Just now",
                 }, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -192,7 +191,7 @@ export default function Contacts() {
         }
 
         setShowCreateModal(false);
-        setNewContact({ name: "", company: "", email: "", phone: "", owner: "", lastContact: "", status: "New" });
+        setNewContact({ name: "", company: "", email: "", phone: "", owner: "", last_contact: "", status: "New" });
         setEditIndex(null);
     };
 
@@ -228,6 +227,7 @@ export default function Contacts() {
                 const res = await api.get(`/api/contacts/${c.id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                console.log("SINGLE CONTACT RAW RESPONSE:", res.data);
                 setSelectedContact(res.data);
             } catch (err) {
                 console.error("Error fetching contact profile", err);
@@ -259,7 +259,7 @@ export default function Contacts() {
 
                 <div className={`${styles.statCard} ${styles.recent}`}>
                     <span>Recently Added</span>
-                    <b>24</b>
+                    <b>{contacts.length}</b>
                 </div>
             </div>
 
@@ -318,7 +318,7 @@ export default function Contacts() {
                     className={styles.createBtn}
                     onClick={() => {
                         setEditIndex(null);
-                        setNewContact({ name: "", company: "", email: "", phone: "", owner: "", lastContact: "", status: "New" });
+                        setNewContact({ name: "", company: "", email: "", phone: "", owner: "", last_contact: "", status: "New" });
                         setShowCreateModal(true);
                     }}
                 >
@@ -375,14 +375,14 @@ export default function Contacts() {
                                     onClick={() => handleRowClick(c)}
                                 >
                                     <td data-label="Contact" className={styles.contactCell}>
-                                        <div className={styles.avatar}>{c.name?.[0]}</div>
-                                        <span>{c.name}</span>
+                                        <div className={styles.avatar}>{c.name?.[0] || "?"}</div>
+                                        <span>{c.name || "Unknown"}</span>
                                     </td>
-                                    <td data-label="Company">{c.company}</td>
-                                    <td data-label="Email">{c.email}</td>
-                                    <td data-label="Phone">{c.phone}</td>
+                                    <td data-label="Company">{c.company || "No Company"}</td>
+                                    <td data-label="Email">{c.email || "No Email"}</td>
+                                    <td data-label="Phone">{c.phone || "No Phone"}</td>
                                     <td data-label="Owner">{c.owner}</td>
-                                    <td data-label="Last Contact">{c.lastContact}</td>
+                                    <td data-label="Last Contact">{c.last_contact}</td>
                                     <td data-label="Status">
                                         <div className={styles.statusWrap}>
                                             <span
@@ -500,8 +500,8 @@ export default function Contacts() {
                             <input
                                 type="text"
                                 placeholder="e.g. 2 days ago"
-                                value={newContact.lastContact}
-                                onChange={(e) => setNewContact({ ...newContact, lastContact: e.target.value })}
+                                value={newContact.last_contact}
+                                onChange={(e) => setNewContact({ ...newContact, last_contact: e.target.value })}
                             />
                         </div>
 

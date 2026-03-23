@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./rbac.module.css";
 import {
     Shield, Plus, Edit2, Trash2, X, ChevronRight, Users,
     Check, Search, ArrowLeft, ShieldCheck, AlertCircle
 } from "lucide-react";
+import api from "@/api/axios";
 
 const MODULES = ["Leads", "Deals", "Contacts", "Reports", "Tasks", "Tickets", "Marketing", "Settings"];
 const PERMISSIONS = ["view", "create", "edit", "delete", "export"];
@@ -84,10 +85,7 @@ const DEFAULT_ROLES = [
     }
 ];
 
-const DUMMY_USERS = [
-    "Varshini (Admin)", "Ravi (Manager)", "Anu (Manager)", "Rohan (Sales)",
-    "Kiran (Rep)", "Amit (Rep)", "Sneha (Rep)", "Priya (Support)", "Dev (Support)", "Neha (Sales)"
-];
+// DUMMY_USERS replaced by dynamic fetching below
 
 const emptyPermissions = () =>
     Object.fromEntries(MODULES.map(m => [m, Object.fromEntries(PERMISSIONS.map(p => [p, false]))]));
@@ -99,6 +97,34 @@ export default function RBAC({ setActive }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [userSearch, setUserSearch] = useState("");
     const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [pendingInvite, setPendingInvite] = useState(null); 
+    const [newUser, setNewUser] = useState(""); // Holds manual name for a new hire
+    const [teamMembers, setTeamMembers] = useState([]); // Real users from backend
+    const [teamLoading, setTeamLoading] = useState(false);
+
+    // On mount: check for a pending invite from the Teams page
+    useEffect(() => {
+        const stored = sessionStorage.getItem("pendingInvite");
+        if (stored) {
+            const invite = JSON.parse(stored);
+            setPendingInvite(invite);
+            
+            // Auto-prepare the role editor
+            const freshRole = {
+                id: Date.now(),
+                name: "",
+                description: "",
+                color: "#6366f1",
+                usersAssigned: 1,
+                permissions: emptyPermissions(),
+                assignedUsers: [invite.name], // Auto-assign the new person
+                isNew: true
+            };
+            setEditingRole(freshRole);
+            setView("editor");
+        }
+        fetchExistingMembers();
+    }, []);
 
     const openCreate = () => {
         setEditingRole({
@@ -111,11 +137,30 @@ export default function RBAC({ setActive }) {
             assignedUsers: [],
             isNew: true
         });
+        fetchExistingMembers(); // Fetch members when opening editor
         setView("editor");
+    };
+
+    const fetchExistingMembers = async () => {
+        try {
+            setTeamLoading(true);
+            const token = localStorage.getItem("token");
+            const response = await api.get("/api/team?branchId=1", {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
+            const raw = response.data;
+            const members = Array.isArray(raw) ? raw : (raw?.members || raw?.data || []);
+            setTeamMembers(members.map(m => m.name || m.email)); // Extract names for the simpler UI
+        } catch (error) {
+            console.error("Error fetching team for RBAC:", error);
+        } finally {
+            setTeamLoading(false);
+        }
     };
 
     const openEdit = (role) => {
         setEditingRole(JSON.parse(JSON.stringify(role)));
+        fetchExistingMembers(); // Fetch members when opening editor
         setView("editor");
     };
 
@@ -124,8 +169,36 @@ export default function RBAC({ setActive }) {
         setDeleteConfirm(null);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!editingRole.name.trim()) return alert("Role name is required.");
+
+        // If this came from the Teams invite flow, POST to /api/users
+        if (pendingInvite) {
+            try {
+                const token = localStorage.getItem("token");
+                const payload = {
+                    "Full Name": pendingInvite.name,
+                    email: pendingInvite.email,
+                    password: pendingInvite.password,
+                    role: editingRole.name,
+                    permissions: editingRole.permissions
+                };
+                await api.post("/api/users", payload, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                sessionStorage.removeItem("pendingInvite");
+                setPendingInvite(null);
+                setNewUser(""); // Clear manual input too
+                alert(`✅ User "${pendingInvite.name}" has been added! An email will be sent to ${pendingInvite.email}.`);
+            } catch (error) {
+                console.error("❌ Error creating user:", error);
+                const errorDetail = error.response?.data?.message || error.message;
+                alert(`Failed to create user. Backend said: "${errorDetail}"`);
+                return;
+            }
+        }
+
+        // Save role locally
         if (editingRole.isNew) {
             const { isNew, ...newRole } = editingRole;
             setRoles(prev => [...prev, { ...newRole, usersAssigned: newRole.assignedUsers.length }]);
@@ -179,7 +252,7 @@ export default function RBAC({ setActive }) {
         r.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const filteredUsers = DUMMY_USERS.filter(u =>
+    const filteredUsers = teamMembers.filter(u =>
         u.toLowerCase().includes(userSearch.toLowerCase())
     );
 
@@ -188,7 +261,7 @@ export default function RBAC({ setActive }) {
             <div className={styles.page}>
                 {/* Editor Header */}
                 <div className={styles.editorHeader}>
-                    <button className={styles.backBtn} onClick={() => { setView("list"); setEditingRole(null); }}>
+                    <button className={styles.backBtn} onClick={() => { setView("list"); setEditingRole(null); setPendingInvite(null); sessionStorage.removeItem("pendingInvite"); }}>
                         <ArrowLeft size={18} />
                         Back to Roles
                     </button>
@@ -197,12 +270,12 @@ export default function RBAC({ setActive }) {
                             <ShieldCheck size={22} />
                         </div>
                         <div>
-                            <h1>{editingRole.isNew ? "Create New Role" : `Edit: ${editingRole.name}`}</h1>
-                            <p>Configure permissions and assign team members</p>
+                            <h1>{editingRole.isNew ? (pendingInvite ? `Assign Role for ${pendingInvite.name}` : "Create New Role") : `Edit: ${editingRole.name}`}</h1>
+                            <p>{pendingInvite ? `Email: ${pendingInvite.email}` : "Configure permissions and assign team members"}</p>
                         </div>
                     </div>
                     <button className={styles.saveBtn} onClick={handleSave}>
-                        <Check size={16} /> Save Role
+                        <Check size={16} /> {pendingInvite ? "Add" : "Save Role"}
                     </button>
                 </div>
 
@@ -258,6 +331,55 @@ export default function RBAC({ setActive }) {
                                 />
                             </div>
                             <div className={styles.userList}>
+                                {/* PENDING INVITE SECTION */}
+                                {pendingInvite && (
+                                    <div className={styles.newUserHighlight}>
+                                        <div className={styles.sectionLabel}>Pending Invitation</div>
+                                        <div 
+                                            className={`${styles.userRow} ${editingRole.assignedUsers.includes(pendingInvite.name) ? styles.userSelected : ""}`}
+                                            onClick={() => toggleUser(pendingInvite.name)}
+                                        >
+                                            <div className={styles.userAvatar} style={{ background: "#10b98120", color: "#10b981" }}>
+                                                {pendingInvite.name.charAt(0)}
+                                            </div>
+                                            <div className={styles.userDetails}>
+                                                <span className={styles.userName}>{pendingInvite.name} (New)</span>
+                                                <span className={styles.userEmail}>{pendingInvite.email}</span>
+                                            </div>
+                                            {editingRole.assignedUsers.includes(pendingInvite.name) && (
+                                                <Check size={16} className={styles.userCheck} style={{ color: "#10b981" }} />
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* MANUAL NEW USER INPUT */}
+                                {!pendingInvite && (
+                                    <div className={styles.manualUserInput}>
+                                        <div className={styles.sectionLabel}>Add New Person</div>
+                                        <div className={styles.inputGroup}>
+                                            <input 
+                                                className={styles.input} 
+                                                placeholder="Enter full name of new hire..."
+                                                value={newUser}
+                                                onChange={e => setNewUser(e.target.value)}
+                                            />
+                                            <button 
+                                                className={styles.addBtn}
+                                                onClick={() => {
+                                                    if (newUser.trim()) {
+                                                        toggleUser(newUser.trim());
+                                                        setNewUser("");
+                                                    }
+                                                }}
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className={styles.sectionLabel}>Existing Members</div>
                                 {filteredUsers.map(user => (
                                     <div
                                         key={user}

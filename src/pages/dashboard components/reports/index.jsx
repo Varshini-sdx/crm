@@ -84,10 +84,18 @@ export default function Reports() {
     { item: "Lost Deals", value: "16", change: "-2%" },
     { item: "Avg Deal Size", value: "₹1,32,000", change: "+5%" },
   ];
+  
+  const DUMMY_PIPELINE = [
+    { stage: "Proposed", value: 45, fill: "#bfdbfe" },
+    { stage: "Negotiating", value: 30, fill: "#e9d5ff" },
+    { stage: "Win", value: 20, fill: "#bbf7d0" },
+    { stage: "Loss", value: 5, fill: "#fed7aa" },
+  ];
 
   const [summaryData, setSummaryData] = useState(DUMMY_SUMMARY);
   const [leadReport, setLeadReport] = useState(DUMMY_LEADS);
   const [salesReport, setSalesReport] = useState(DUMMY_SALES);
+  const [pipelineStats, setPipelineStats] = useState(DUMMY_PIPELINE);
 
   const DUMMY_VELOCITY = {
     stages: [

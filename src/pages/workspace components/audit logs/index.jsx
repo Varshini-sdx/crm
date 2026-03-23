@@ -12,8 +12,11 @@ import {
     ShieldCheck,
     Lock,
     Clock,
-    CheckCircle2
+    CheckCircle2,
+    Loader2,
+    MessageSquarePlus
 } from "lucide-react";
+import auditService from "@/api/auditService";
 
 const DUMMY_LOGS = [
     { id: 1, date: "Mar 4, 10:30 AM", user: "Arjun", module: "Deals", action: "Updated", record: "Deal #124", ip: "192.168.1.45", before: { status: "Open" }, after: { status: "Closed" } },
@@ -29,12 +32,35 @@ const MODULE_OPTIONS = ["All", "Deals", "Tickets", "Leads", "Settings", "Reports
 const ACTION_OPTIONS = ["All", "Created", "Updated", "Deleted", "Closed", "Exported", "Logged in", "Role changed", "Permission updated"];
 
 export const AuditLogs = ({ setActive }) => {
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [moduleFilter, setModuleFilter] = useState("All");
     const [actionFilter, setActionFilter] = useState("All");
     const [selectedLog, setSelectedLog] = useState(null);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [feedbackValue, setFeedbackValue] = useState("");
+    const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
-    const filteredLogs = DUMMY_LOGS.filter(log => {
+    const fetchLogs = React.useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await auditService.getLogs();
+            setLogs(Array.isArray(data) ? data : (data?.logs || data?.data || []));
+        } catch (err) {
+            console.error("❌ Error fetching audit logs:", err);
+            setError("Failed to load audit logs. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    React.useEffect(() => {
+        fetchLogs();
+    }, [fetchLogs]);
+
+    const filteredLogs = logs.filter(log => {
         const matchesSearch = log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
             log.record.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesModule = moduleFilter === "All" || log.module === moduleFilter;
@@ -54,6 +80,35 @@ export const AuditLogs = ({ setActive }) => {
         }
     };
 
+    const handleSendFeedback = async () => {
+        if (!feedbackValue.trim()) return;
+        try {
+            setSubmittingFeedback(true);
+            await auditService.sendFeedback({
+                message: feedbackValue,
+                type: "audit-logs",
+                timestamp: new Date().toISOString()
+            });
+            alert("✅ Thank you for your feedback!");
+            setFeedbackValue("");
+            setShowFeedbackModal(false);
+        } catch (err) {
+            console.error("❌ Error sending feedback:", err);
+            alert("Failed to send feedback. Please try again later.");
+        } finally {
+            setSubmittingFeedback(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className={styles.loadingState}>
+                <Loader2 className={styles.spinner} size={48} />
+                <p>Retrieving audit records...</p>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.pageContainer}>
             {/* Header */}
@@ -68,6 +123,10 @@ export const AuditLogs = ({ setActive }) => {
                     </div>
                 </div>
                 <div className={styles.headerActions}>
+                    <button className={styles.feedbackBtn} onClick={() => setShowFeedbackModal(true)}>
+                        <MessageSquarePlus size={18} />
+                        <span>Send Feedback</span>
+                    </button>
                     <div className={styles.dateFilter}>
                         <Calendar size={16} />
                         <span>Last 7 Days</span>
@@ -276,6 +335,39 @@ export const AuditLogs = ({ setActive }) => {
                         </div>
                     </div>
                 </>
+            )}
+            {/* Feedback Modal */}
+            {showFeedbackModal && (
+                <div className={styles.modalOverlay} onClick={() => setShowFeedbackModal(false)}>
+                    <div className={styles.modal} onClick={e => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3>Share your Feedback</h3>
+                            <button className={styles.closeBtn} onClick={() => setShowFeedbackModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className={styles.modalBody}>
+                            <p>How can we improve the Audit Logs experience?</p>
+                            <textarea 
+                                className={styles.textarea}
+                                placeholder="Tell us what you think..."
+                                value={feedbackValue}
+                                onChange={e => setFeedbackValue(e.target.value)}
+                                rows={4}
+                            />
+                        </div>
+                        <div className={styles.modalFooter}>
+                            <button className={styles.cancelBtn} onClick={() => setShowFeedbackModal(false)}>Cancel</button>
+                            <button 
+                                className={styles.submitBtn} 
+                                onClick={handleSendFeedback} 
+                                disabled={submittingFeedback || !feedbackValue.trim()}
+                            >
+                                {submittingFeedback ? "Sending..." : "Submit Feedback"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

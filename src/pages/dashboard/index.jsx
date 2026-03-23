@@ -78,8 +78,10 @@ const workspace = {
 
 
 export default function Dashboard() {
+    console.log("Dashboard component rendering...");
 
     const [active, setActive] = useState("Dashboard");
+    console.log("Dashboard active state:", active);
     const [branch, setBranch] = useState(fakeOrg.branches[0]);
 
 

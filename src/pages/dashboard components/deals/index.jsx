@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import api from "@/api/axios";
 import styles from "./deals.module.css";
 import * as XLSX from "xlsx";
-import EntityTasksDrawer from "../tasks/EntityTasksDrawer";
 
 import {
   PieChart,
@@ -13,26 +12,21 @@ import {
 } from "recharts";
 
 export default function Deals({ branch }) {
-  const [deals, setDeals] = useState([]);
-  const DUMMY_PIPELINES = {
-    "Sales Pipeline": [
-      { id: 101, deal_name: "Q1 CRM License", company: "Global Tech Inc", stage: "Proposal", value: "₹4,50,000", owner: "Varshini", close: "2026-03-15" },
-      { id: 102, deal_name: "Annual Maintenance", company: "Cyberdyne", stage: "Negotiation", value: "₹1,20,000", owner: "Ravi", close: "2026-02-28" },
-      { id: 103, deal_name: "Cloud Migration", company: "Wayne Corp", stage: "Won", value: "₹8,00,000", owner: "Anu", close: "2026-01-20" },
-      { id: 104, deal_name: "Security Audit", company: "Stark Ind", stage: "Proposal", value: "₹2,50,000", owner: "Varshini", close: "2026-04-10" },
-      { id: 105, deal_name: "Mobile App Dev", company: "Z-Telecom", stage: "Negotiation", value: "₹6,00,000", owner: "Anu", close: "2026-05-20" },
-      { id: 106, deal_name: "Data Warehousing", company: "Omni Consumer Products", stage: "Proposal", value: "₹12,00,000", owner: "Ravi", close: "2026-06-15" }
-    ],
-    "Partnerships": [
-      { id: 201, deal_name: "Referral Program", company: "Hooli", stage: "Negotiation", value: "₹50,000", owner: "Anu", close: "2026-05-01" },
-      { id: 202, deal_name: "API Integration", company: "Pied Piper", stage: "Won", value: "₹3,00,000", owner: "Ravi", close: "2026-02-10" },
-      { id: 203, deal_name: "Affiliate Marketing", company: "E-Corp", stage: "Proposal", value: "₹1,50,000", owner: "Varshini", close: "2026-04-05" },
-      { id: 204, deal_name: "Sponsorship Deal", company: "Massive Dynamic", stage: "Won", value: "₹5,00,000", owner: "Anu", close: "2026-03-01" }
-    ]
-  };
+  const PIPELINE_TABS = [
+    { label: "Deals Pipeline", type: "deals" },
+    { label: "Sales Pipeline", type: "sales" },
+    { label: "Partnership", type: "partnership" },
+    { label: "Enterprise", type: "enterprise" }
+  ];
 
-  const [pipelineMap, setPipelineMap] = useState(DUMMY_PIPELINES);
-  const [activePipeline, setActivePipeline] = useState("Sales Pipeline");
+  const [pipelineMap, setPipelineMap] = useState({
+    proposal: [],
+    negotiation: [],
+    won: [],
+    lost: []
+  });
+  const [activePipeline, setActivePipeline] = useState(PIPELINE_TABS[0]);
+  const [loading, setLoading] = useState(false);
   {/* const [analytics, setAnalytics] = useState({
     winLoss: [],
     winReasons: [],
@@ -82,13 +76,6 @@ export default function Deals({ branch }) {
     active: true
   });
 
-  const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
-  const [selectedEntityForTasks, setSelectedEntityForTasks] = useState(null);
-
-  const openTaskDrawer = (deal) => {
-    setSelectedEntityForTasks({ id: deal.id, name: deal.deal_name });
-    setTaskDrawerOpen(true);
-  };
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -107,45 +94,42 @@ export default function Deals({ branch }) {
   // Fetch Data
   const fetchData = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      // 1. Fetch Pipelines (Grouped Deals)
-      const pipelineRes = await api.get("/api/deals/pipelines", { headers });
-      let pMap = pipelineRes.data || {};
+      // Use the pluralized 'activePipeline.type' for the backend query
+      const pipelineRes = await api.get(`/api/dashboard/pipeline?type=${activePipeline.type}`, { headers });
+      console.log(`DEALS RAW DATA (${activePipeline.type}):`, pipelineRes.data);
+      
+      const rawData = pipelineRes.data || {};
+      
+      // Map data with safety guards
+      const newPipelineMap = {
+        proposal: Array.isArray(rawData.proposal) ? rawData.proposal : [],
+        negotiation: Array.isArray(rawData.negotiation) ? rawData.negotiation : [],
+        won: Array.isArray(rawData.won) ? rawData.won : [],
+        lost: Array.isArray(rawData.lost) ? rawData.lost : []
+      };
 
-      // 🌟 DUMMY DATA INJECTION 🌟
-      if (Object.keys(pMap).length === 0) {
-        pMap = {
-          "Sales Pipeline": [
-            { id: 101, deal_name: "Q1 CRM License", company: "Global Tech Inc", stage: "Proposal", value: "₹4,50,000", owner: "Varshini", close: "2026-03-15" },
-            { id: 102, deal_name: "Annual Maintenance", company: "Cyberdyne", stage: "Negotiation", value: "₹1,20,000", owner: "Ravi", close: "2026-02-28" },
-            { id: 103, deal_name: "Cloud Migration", company: "Wayne Corp", stage: "Won", value: "₹8,00,000", owner: "Anu", close: "2026-01-20" },
-            { id: 104, deal_name: "Security Audit", company: "Stark Ind", stage: "Proposal", value: "₹2,50,000", owner: "Varshini", close: "2026-04-10" },
-            { id: 105, deal_name: "Mobile App Dev", company: "Z-Telecom", stage: "Negotiation", value: "₹6,00,000", owner: "Anu", close: "2026-05-20" },
-            { id: 106, deal_name: "Data Warehousing", company: "Omni Consumer Products", stage: "Proposal", value: "₹12,00,000", owner: "Ravi", close: "2026-06-15" }
-          ],
-          "Partnerships": [
-            { id: 201, deal_name: "Referral Program", company: "Hooli", stage: "Negotiation", value: "₹50,000", owner: "Anu", close: "2026-05-01" },
-            { id: 202, deal_name: "API Integration", company: "Pied Piper", stage: "Won", value: "₹3,00,000", owner: "Ravi", close: "2026-02-10" },
-            { id: 203, deal_name: "Affiliate Marketing", company: "E-Corp", stage: "Proposal", value: "₹1,50,000", owner: "Varshini", close: "2026-04-05" },
-            { id: 204, deal_name: "Sponsorship Deal", company: "Massive Dynamic", stage: "Won", value: "₹5,00,000", owner: "Anu", close: "2026-03-01" }
-          ]
-        };
-      }
+      setPipelineMap(newPipelineMap);
 
-      setPipelineMap(pMap);
+      // 2. Fetch Win/Loss Analytics Graph
+      const winLossRes = await api.get("/api/dashboard/win-loss", { headers }).catch(err => {
+        console.error("Win/Loss FULL ERROR:", err.response?.data || err);
+        return { data: null };
+      });
+      console.log("WIN/LOSS RAW DATA:", winLossRes.data);
 
-      // Set active pipeline to first key if not set
-      const pipelineKeys = Object.keys(pMap);
-      if (pipelineKeys.length > 0 && !activePipeline) {
-        setActivePipeline(prev => prev || pipelineKeys[0]);
-      }
+      const wlData = winLossRes.data || {};
 
-      // 2. Fetch Analytics
-      const analyticsRes = await api.get("/api/deals/analytics", { headers });
+      // Calculate simple winLoss from currently loaded pipeline or use backend if available
+      const currentWon = newPipelineMap.won.length;
+      const currentLost = newPipelineMap.lost.length;
+      const currentProgress = newPipelineMap.proposal.length + newPipelineMap.negotiation.length;
 
-      // ✅ MERGE analytics safely
+      // 3. Fetch Reasons (Keeping existing analytics if it contains insights)
+      const analyticsRes = await api.get("/api/deals/analytics", { headers }).catch(() => ({ data: null }));
       const a = analyticsRes.data || {};
 
       // Helper to map backend reasons to frontend structure
@@ -165,10 +149,12 @@ export default function Deals({ branch }) {
       };
 
       setAnalytics({
-        winLoss: Array.isArray(a.winLoss) && a.winLoss.length ? a.winLoss : [
-          { name: "Won", value: 12 },
-          { name: "Lost", value: 5 },
-          { name: "In Progress", value: 8 }
+        // Priorities backend data from the new endpoint if it's in the standard Recharts array format
+        winLoss: Array.isArray(wlData) ? wlData : 
+                 Array.isArray(wlData.data) ? wlData.data : [
+          { name: "Won", value: wlData.won ?? currentWon ?? 12 },
+          { name: "Lost", value: wlData.lost ?? currentLost ?? 5 },
+          { name: "In Progress", value: wlData.progress ?? wlData.negotiation ?? currentProgress ?? 8 }
         ],
         winReasons: mapReasons(a.winReasons || a.win_reasons),
         lossReasons: mapReasons(a.lossReasons || a.loss_reasons || [
@@ -178,38 +164,26 @@ export default function Deals({ branch }) {
         ])
       });
 
-
     } catch (error) {
       console.error("Error fetching deals data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activePipeline, branch]); // Refetch when pipeline tab changes
 
-  // Update deals list when active pipeline changes
-  {/* useEffect(() => {
-    if (activePipeline && pipelineMap[activePipeline]) {
-      setDeals(pipelineMap[activePipeline]);
-    } else {
-      setDeals([]);
-    }
-  }, [activePipeline, pipelineMap]); */}
+  // Create a flat array of all deals from CURRENT pipeline
+  const flattenedDeals = [
+    ...pipelineMap.proposal.map(d => ({ ...d, stage: "Proposal", pipeline: activePipeline.label })),
+    ...pipelineMap.negotiation.map(d => ({ ...d, stage: "Negotiation", pipeline: activePipeline.label })),
+    ...pipelineMap.won.map(d => ({ ...d, stage: "Won", pipeline: activePipeline.label })),
+    ...pipelineMap.lost.map(d => ({ ...d, stage: "Lost", pipeline: activePipeline.label }))
+  ];
 
-  useEffect(() => {
-    if (!activePipeline) return;
-
-    const pipelineDeals = pipelineMap[activePipeline];
-    if (Array.isArray(pipelineDeals)) {
-      setDeals(pipelineDeals);
-    }
-  }, [activePipeline, pipelineMap]);
-
-  // Create a flat array of all deals from all pipelines, adding the pipeline name to each deal
-  const allDeals = Object.entries(pipelineMap).flatMap(([pipelineName, dealsInPipeline]) =>
-    (dealsInPipeline || []).map(deal => ({ ...deal, pipeline: pipelineName }))
-  );
+  const allDeals = flattenedDeals;
 
 
 
@@ -433,41 +407,39 @@ export default function Deals({ branch }) {
 
         {/* Pipeline Tabs */}
         <div className={styles.pipelineTabs}>
-          {Object.keys(pipelineMap).map(key => (
+          {PIPELINE_TABS.map(tab => (
             <button
-              key={key}
-              onClick={() => setActivePipeline(key)}
-              className={`${styles.pipelineTab} ${activePipeline === key ? styles.activeTab : ""
+              key={tab.type}
+              onClick={() => setActivePipeline(tab)}
+              className={`${styles.pipelineTab} ${activePipeline.type === tab.type ? styles.activeTab : ""
                 }`}
             >
-              {key}
+              {tab.label}
             </button>
           ))}
         </div>
 
         {/* SAME KANBAN – data swaps */}
-        <div className={`${styles.pipelineBoardWrap} ${styles[activePipeline]}`}>
+        <div className={`${styles.pipelineBoardWrap} ${styles[activePipeline.type]}`}>
           <div className={styles.pipelineBoard}>
-            {["Proposal", "Negotiation", "Won"].map(stage => (
+            {["Proposal", "Negotiation", "Won", "Lost"].map(stage => (
               <div
                 key={stage}
                 className={`${styles.pipelineColumn} ${styles[stage]}`}
-
               >
                 <div className={styles.pipelineHeader}>
                   <span>{stage}</span>
-                  <b>{deals.filter(d => (d.stage || "").toLowerCase() === stage.toLowerCase()).length}</b>
+                  <b>{pipelineMap[stage.toLowerCase()]?.length || 0}</b>
                 </div>
 
                 <div className={styles.pipelineCards}>
-                  {deals
-                    .filter(d => (d.stage || "").toLowerCase() === stage.toLowerCase())
+                  {(pipelineMap[stage.toLowerCase()] || [])
                     .map((deal, i) => (
                       <div key={deal.id || i} className={styles.pipelineCard}>
                         <div className={styles.cardActions}>
                           <button
                             className={styles.cardActionBtn}
-                            onClick={(e) => { e.stopPropagation(); openEditModal(deal); }}
+                            onClick={(e) => { e.stopPropagation(); openEditModal({ ...deal, stage }); }}
                             title="Edit"
                           >
                             ✏️
@@ -480,12 +452,12 @@ export default function Deals({ branch }) {
                             🗑️
                           </button>
                         </div>
-                        <strong>{deal.deal_name}</strong>
+                        <strong>{deal.title || deal.deal_name}</strong>
                         <span className={styles.pipelineCompany}>{deal.company}</span>
 
                         <div className={styles.pipelineMeta}>
-                          <span>{deal.value}</span>
-                          <span>{deal.close}</span>
+                          <span>₹{Number(deal.value).toLocaleString()}</span>
+                          <span>{deal.date || deal.close}</span>
                         </div>
                       </div>
                     ))}
@@ -728,7 +700,6 @@ export default function Deals({ branch }) {
                 <td>{d.pipeline}</td>
                 <td>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button onClick={() => openTaskDrawer(d)} style={{ border: "none", background: "none", cursor: "pointer" }} title="Deal Tasks">📋</button>
                     <button onClick={() => openEditModal(d)} style={{ border: "none", background: "none", cursor: "pointer" }}>✏️</button>
                     <button onClick={() => handleDeleteDeal(d.id)} style={{ border: "none", background: "none", cursor: "pointer" }}>🗑️</button>
                   </div>
@@ -814,13 +785,6 @@ export default function Deals({ branch }) {
         </div>
       )}
 
-      <EntityTasksDrawer
-        isOpen={taskDrawerOpen}
-        onClose={() => setTaskDrawerOpen(false)}
-        entityType="deal"
-        entityId={selectedEntityForTasks?.id}
-        entityName={selectedEntityForTasks?.name}
-      />
     </div>
   );
 }

@@ -20,7 +20,9 @@ import {
     Tooltip,
     ResponsiveContainer
 } from "recharts";
-import { Trash2, Edit2, X as CloseIcon } from "lucide-react";
+import { Trash2, Edit2, X as CloseIcon, Loader2 } from "lucide-react";
+import landingPageService from "@/api/landingPageService";
+import conversionService from "@/api/conversionService";
 
 // The storage key from Campaigns module
 const LP_STORAGE_KEY = "crm_landing_pages";
@@ -43,65 +45,94 @@ const mockSubmissions = [
 ];
 
 export const WebsiteConversion = ({ branch }) => {
-    // Shared landing page state
-    const [landingPages, setLandingPages] = React.useState(() => {
-        const defaultPages = [
-            {
-                id: 1,
-                name: "Product Demo Promo",
-                slug: "demo-request",
-                campaign: "Demo Email Blast",
-                status: "Published",
-                leads: 124,
-                conversion: "8.4%",
-            },
-            {
-                id: 2,
-                name: "Newsletter Signup",
-                slug: "subscribe",
-                campaign: "Site Footer",
-                status: "Published",
-                leads: 341,
-                conversion: "4.1%",
-            }
-        ];
+    const [landingPages, setLandingPages] = useState([]);
+    const [stats, setStats] = useState({ visitors: 0, leads: 0, conversion: 0 });
+    const [trends, setTrends] = useState([]);
+    const [submissions, setSubmissions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-        const saved = localStorage.getItem(LP_STORAGE_KEY);
-        return saved ? JSON.parse(saved) : defaultPages;
-    });
-
-    const [activeLanding, setActiveLanding] = React.useState(null);
-    const [activeLPTab, setActiveLPTab] = React.useState("overview");
-    const [showChatWidget, setShowChatWidget] = React.useState(false);
+    const [activeLanding, setActiveLanding] = useState(null);
+    const [activeLPTab, setActiveLPTab] = useState("overview");
+    const [showChatWidget, setShowChatWidget] = useState(false);
     const editorRef = React.useRef(null);
 
-    React.useEffect(() => {
-        localStorage.setItem(LP_STORAGE_KEY, JSON.stringify(landingPages));
-    }, [landingPages]);
+    // 1. Fetch all data on mount
+    const fetchData = React.useCallback(async () => {
+        try {
+            setLoading(true);
+            const [lpData, statData, trendData, subData] = await Promise.all([
+                landingPageService.getLandingPages(),
+                conversionService.getStats(),
+                conversionService.getTrends(),
+                conversionService.getSubmissions()
+            ]);
+            setLandingPages(lpData);
+            setStats(statData);
+            setTrends(trendData);
+            setSubmissions(subData);
+        } catch (err) {
+            console.error("❌ Website Conversion Fetch Error:", err);
+            setError("Failed to load conversion data. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    const handleDeleteLanding = (id) => {
-        setLandingPages(landingPages.filter((lp) => lp.id !== id));
-        if (activeLanding?.id === id) {
-            setActiveLanding(null);
+    React.useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const handleDeleteLanding = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this page?")) return;
+        try {
+            await landingPageService.deleteLandingPage(id);
+            setLandingPages(landingPages.filter((lp) => lp.id !== id));
+            if (activeLanding?.id === id) setActiveLanding(null);
+        } catch (err) {
+            alert("Failed to delete landing page.");
         }
     };
 
-    const handleCreateNewForm = () => {
-        const newPage = {
-            id: Date.now(),
-            name: "New Capture Form",
-            slug: "new-capture",
-            campaign: "Direct Website",
-            status: "Draft",
-            leads: 0,
-            conversion: "0%",
-        };
-        setLandingPages([...landingPages, newPage]);
-        setActiveLanding(newPage);
-        setTimeout(() => {
-            editorRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
+    const handleCreateNewForm = async () => {
+        try {
+            const newLP = {
+                name: "New Capture Form",
+                slug: `form-${Date.now()}`,
+                campaign: "Direct Website",
+                status: "Draft",
+                leads: 0,
+                conversion: "0%",
+            };
+            const created = await landingPageService.createLandingPage(newLP);
+            setLandingPages([created, ...landingPages]);
+            setActiveLanding(created);
+            setTimeout(() => {
+                editorRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 100);
+        } catch (err) {
+            alert("Failed to create landing page.");
+        }
     };
+
+    const handleSaveChanges = async () => {
+        try {
+            const updated = await landingPageService.updateLandingPage(activeLanding.id, activeLanding);
+            setLandingPages(landingPages.map((lp) => lp.id === updated.id ? updated : lp));
+            alert("Landing Page saved successfully.");
+        } catch (err) {
+            alert("Failed to save landing page.");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className={styles.loadingState}>
+                <Loader2 className={styles.spinner} size={48} />
+                <p>Syncing conversion data...</p>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.conversionPage}>
@@ -114,8 +145,8 @@ export const WebsiteConversion = ({ branch }) => {
                         <h4>Website Visitors</h4>
                         <Globe size={20} className={styles.icon} />
                     </div>
-                    <h2>2,850</h2>
-                    <span>+12% vs last week</span>
+                    <h2>{stats.visitors?.toLocaleString() || "0"}</h2>
+                    <span>{stats.visitorTrend || "—"}</span>
                 </div>
 
                 <div className={`${styles.kpiCard} ${styles.green}`}>
@@ -123,8 +154,8 @@ export const WebsiteConversion = ({ branch }) => {
                         <h4>Leads Captured</h4>
                         <Users size={20} className={styles.icon} />
                     </div>
-                    <h2>179</h2>
-                    <span>+8% vs last week</span>
+                    <h2>{stats.leads?.toLocaleString() || "0"}</h2>
+                    <span>{stats.leadTrend || "—"}</span>
                 </div>
 
                 <div className={`${styles.kpiCard} ${styles.orange}`}>
@@ -132,8 +163,8 @@ export const WebsiteConversion = ({ branch }) => {
                         <h4>Conversion Rate</h4>
                         <MousePointerClick size={20} className={styles.icon} />
                     </div>
-                    <h2>6.2%</h2>
-                    <span>-0.5% vs last week</span>
+                    <h2>{stats.conversion || "0"}%</h2>
+                    <span>{stats.conversionTrend || "—"}</span>
                 </div>
             </div>
 
@@ -142,7 +173,7 @@ export const WebsiteConversion = ({ branch }) => {
                 <div className={styles.chartCard}>
                     <h3>Lead Generation Trend</h3>
                     <ResponsiveContainer width="100%" height={300} style={{ marginTop: "20px" }}>
-                        <AreaChart data={mockVisitorData}>
+                        <AreaChart data={trends.length > 0 ? trends : mockVisitorData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
                             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
@@ -254,10 +285,7 @@ export const WebsiteConversion = ({ branch }) => {
                             <div className={styles.editorActions}>
                                 <button
                                     className={styles.saveBtn}
-                                    onClick={() => {
-                                        setLandingPages(landingPages.map((lp) => lp.id === activeLanding.id ? activeLanding : lp));
-                                        alert("Landing Page saved locally.");
-                                    }}
+                                    onClick={handleSaveChanges}
                                 >
                                     Save Changes
                                 </button>
@@ -326,7 +354,7 @@ export const WebsiteConversion = ({ branch }) => {
                         <button className={styles.textBtn}>View All</button>
                     </div>
                     <div className={styles.submissionList}>
-                        {mockSubmissions.map(sub => (
+                        {(submissions.length > 0 ? submissions : mockSubmissions).map(sub => (
                             <div key={sub.id} className={styles.subItem}>
                                 <div className={styles.subInfo}>
                                     <strong>{sub.name}</strong>

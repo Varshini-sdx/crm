@@ -1,0 +1,186 @@
+.panel {
+  background: #fff;
+  border-radius: 24px;
+  padding: 1.6rem;
+  box-shadow: 0 20px 50px rgba(90, 80, 170, 0.12);
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel h3 {
+  font-size: 1.1rem;
+  color: #1f2a44;
+  font-weight: 600;
+  margin-bottom: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.noteInput {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+  background: #fafaff;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid #f0f1f6;
+}
+
+.noteInput textarea {
+  flex: 1;
+  resize: none;
+  min-height: 60px;
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: 1px solid #e4e6f0;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.noteInput textarea:focus {
+  outline: none;
+  border-color: #6b5cff;
+}
+
+.noteInput button {
+  padding: 0 1.4rem;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #6b5cff, #8c21ea);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(107, 92, 255, 0.25);
+}
+
+.noteCard {
+  padding: 1.4rem;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #f0f1f6;
+  margin-bottom: 1.2rem;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.noteCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(107, 92, 255, 0.08);
+  border-color: #6b5cff33;
+}
+
+.noteCard p {
+  font-size: 0.95rem;
+  color: #2a3452;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+}
+
+.editing {
+  border-color: #6b5cff !important;
+  box-shadow: 0 15px 45px rgba(107, 92, 255, 0.12) !important;
+  transform: scale(1.02) !important;
+  background: #fff;
+  z-index: 10;
+}
+
+.premiumEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.editTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid #e4e6f0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #2a3452;
+  background: #fcfcff;
+  resize: vertical;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.editTextarea:focus {
+  border-color: #6b5cff;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(107, 92, 255, 0.05);
+}
+
+.saveActionBtn {
+  background: linear-gradient(135deg, #6b5cff, #8c21ea);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(107, 92, 255, 0.2);
+}
+
+.saveActionBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(107, 92, 255, 0.3);
+}
+
+.cancelActionBtn {
+  background: #f6f7ff;
+  color: #7a7fa3;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelActionBtn:hover {
+  background: #eeefff;
+  color: #6b5cff;
+}
+
+.noteMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.noteMeta span {
+  font-size: 0.7rem;
+  color: #9aa0c3;
+}
+
+.noteActions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.actionBtn {
+  background: #fff;
+  border: 1px solid #e6e8f0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.actionBtn:hover {
+  background: #f4f2ff;
+  border-color: #6b5cff;
+}

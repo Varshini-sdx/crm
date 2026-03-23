@@ -31,11 +31,18 @@ const initialWorkflows = [
   { id: 3, name: "VIP Welcome Sequence", trigger: "Tag Added: VIP", steps: 5, status: "Active", theme: "cardGreen" },
 ];
 
-const enterpriseRules = [
+// Icons Map for Enterprise Rules
+const ICON_MAP = {
+  "ShieldCheck": <ShieldCheck size={24} />,
+  "Layers": <Layers size={24} />,
+  "UserPlus": <UserPlus size={24} />
+};
+
+const DEFAULT_ENTERPRISE_RULES = [
   {
     id: "deal-approval",
     title: "Deal Approval Rules",
-    icon: <ShieldCheck size={24} />,
+    iconKey: "ShieldCheck",
     description: "Multi-level authorization for high-value and high-discount deals.",
     rules: [
       { condition: "Discount > 20%", action: "Manager Approval Required" },
@@ -47,7 +54,7 @@ const enterpriseRules = [
   {
     id: "pipeline-control",
     title: "Sales Stage Rules",
-    icon: <Layers size={24} />,
+    iconKey: "Layers",
     description: "Control pipeline movement with mandatory field and state checks.",
     rules: [
       { condition: "Move to Proposal", action: "Budget + Decision Maker required" },
@@ -58,7 +65,7 @@ const enterpriseRules = [
   {
     id: "lead-qualification",
     title: "Lead Qualification Rules",
-    icon: <UserPlus size={24} />,
+    iconKey: "UserPlus",
     description: "Automated scoring logic to determine lead quality and sales priority.",
     rules: [
       { condition: "Corporate Email", action: "+15 Score & Direct Sales Call" },
@@ -84,6 +91,8 @@ const AutomationHome = ({ branch }) => {
   const [newRule, setNewRule] = useState({ name: "", condition: "", action: "", status: "active" });
   const [editingId, setEditingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [enterpriseRules, setEnterpriseRules] = useState(DEFAULT_ENTERPRISE_RULES);
+  const [loadingEnterprise, setLoadingEnterprise] = useState(false);
 
   // Workflow Builder State
   const [workflowNodes, setWorkflowNodes] = useState([
@@ -108,11 +117,20 @@ const AutomationHome = ({ branch }) => {
       const response = await api.get(`/api/automation/rules?branchId=${branchId}`, {
         headers: getAuthHeader()
       });
-      // Ensure rules is always an array
-      const rulesData = Array.isArray(response.data)
+      // Defensive mapping to handle both camelCase and snake_case from backend
+      const rawData = Array.isArray(response.data)
         ? response.data
         : (response.data && Array.isArray(response.data.rules) ? response.data.rules : []);
-      setRules(rulesData);
+
+      const mappedRules = rawData.map(r => ({
+        ...r,
+        name: r.name || r.rule_name || "Untitled Rule",
+        status: r.status || r.rule_status || "active",
+        condition: r.condition || r.rule_condition || (r.conditions?.[0]?.value) || "No conditions"
+      }));
+
+      console.log("%c[AUTOMATION] Rules fetched:", "color: #7c3aed; font-weight: bold;", mappedRules);
+      setRules(mappedRules);
     } catch (error) {
       console.error("Error fetching rules:", error);
       setRules([]); // Fallback to empty array on error
@@ -121,9 +139,27 @@ const AutomationHome = ({ branch }) => {
     }
   }, [branch]);
 
+  const fetchEnterpriseRules = useCallback(async () => {
+    try {
+      setLoadingEnterprise(true);
+      const response = await api.get("/api/automation/enterprise-rules", {
+        headers: getAuthHeader()
+      });
+      if (response.data && Array.isArray(response.data)) {
+        setEnterpriseRules(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching enterprise rules:", error);
+      // Keep defaults on error
+    } finally {
+      setLoadingEnterprise(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchRules();
-  }, [fetchRules]);
+    fetchEnterpriseRules();
+  }, [fetchRules, fetchEnterpriseRules]);
 
   // Rule Handlers
   const toggleRule = async (rule) => {
@@ -321,8 +357,8 @@ const AutomationHome = ({ branch }) => {
             ) : rules.length === 0 ? (
               <div className={styles.emptyState}>No automation rules found. Create one to get started.</div>
             ) : (
-              rules.map((rule) => (
-                <div key={rule.id} className={styles.ruleRow}>
+              rules.map((rule, idx) => (
+                <div key={rule.id || `rule-${idx}`} className={styles.ruleRow}>
                   <label className={styles.switch}>
                     <input
                       type="checkbox"
@@ -379,17 +415,17 @@ const AutomationHome = ({ branch }) => {
           {/* ----------- Enterprise Rules Section ----------- */}
           <div className={styles.workflowSectionTitle}>Enterprise Rules</div>
           <div className={styles.enterpriseGrid}>
-            {enterpriseRules.map((rule) => (
-              <div key={rule.id} className={`${styles.enterpriseCard} ${styles[rule.theme]}`}>
+            {enterpriseRules.map((rule, idx) => (
+              <div key={rule.id || `ent-${idx}`} className={`${styles.enterpriseCard} ${styles[rule.theme]}`}>
                 <div className={styles.entHeader}>
-                  <div className={styles.entIcon}>{rule.icon}</div>
+                  <div className={styles.entIcon}>{ICON_MAP[rule.iconKey] || ICON_MAP["ShieldCheck"]}</div>
                   <div className={styles.entTitleGroup}>
                     <div className={styles.entTitle}>{rule.title}</div>
                     <div className={styles.entDesc}>{rule.description}</div>
                   </div>
                 </div>
                 <div className={styles.entRulesList}>
-                  {rule.rules.map((r, i) => (
+                  {(rule.rules || []).map((r, i) => (
                     <div key={i} className={styles.entRuleItem}>
                       <span className={styles.entCondition}>{r.condition}</span>
                       <span className={styles.entAction}>{r.action}</span>
@@ -658,7 +694,7 @@ export default function Workspace({ active, branch, setActive }) {
             {active === "Website Conversion" && <WebsiteConversion branch={branch} />}
             {active === "Campaigns" && <Campaigns branch={branch} />}
             {active === "Workspace" && <AutomationHome branch={branch} />}
-            {active === "Team" && <Team branch={branch} />}
+            {active === "Team" && <Team branch={branch} setActive={setActive} />}
           </motion.div>
         </AnimatePresence>
       </div>

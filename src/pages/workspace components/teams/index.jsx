@@ -72,7 +72,7 @@ const mockTeamData = [
     }
 ];
 
-export const Team = ({ branch }) => {
+export const Team = ({ branch, setActive }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("All");
     // Always start with mock data so the page renders immediately
@@ -86,7 +86,9 @@ export const Team = ({ branch }) => {
 
     const fetchTeam = useCallback(async () => {
         try {
-            const response = await api.get("/api/team", {
+            setLoading(true);
+            const branchId = branch?.id || 1;
+            const response = await api.get(`/api/team?branchId=${branchId}`, {
                 headers: getAuthHeader()
             });
             const raw = response.data;
@@ -99,13 +101,30 @@ export const Team = ({ branch }) => {
                         : null;
 
             if (members && members.length > 0) {
-                setTeamMembers(members);
-                console.log("✅ Teams: loaded live data from backend.");
+                // Map backend fields (id, name, city, state, country) to frontend expectations
+                const mappedMembers = members.map((m, idx) => ({
+                    ...m,
+                    id: m.id || `team-${idx}`,
+                    name: m.name || "Unknown Member",
+                    email: m.email || "No email provided",
+                    role: m.role || "Employee",
+                    status: m.status || "Offline",
+                    phone: m.phone || "No phone",
+                    lastActive: m.lastActive || "Recently",
+                    initials: (m.name || "??").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2),
+                    color: ["#6366f1", "#10b981", "#f59e0b", "#ec4899", "#3b82f6"][idx % 5],
+                    location: [m.city, m.state, m.country].filter(Boolean).join(", ") || "No location"
+                }));
+                setTeamMembers(mappedMembers);
+                console.log("%c[TEAMS] Loaded live data:", "color: #10b981; font-weight: bold;", mappedMembers);
             } else {
-                console.warn("⚠️ Teams: backend response missing expected data – showing demo data.", response.data);
+                console.warn("⚠️ Teams: backend response empty - showing demo data.");
             }
         } catch (error) {
-            console.warn("⚠️ Teams: backend not connected – showing demo data.", error.message);
+            console.error("❌ Teams Fetch Error:", error);
+            // If it's a 500 error, we keep the mock data but log the details
+        } finally {
+            setLoading(false);
         }
     }, []);
 
@@ -131,14 +150,21 @@ export const Team = ({ branch }) => {
     };
 
     const [showInviteModal, setShowInviteModal] = useState(false);
-    const [inviteForm, setInviteForm] = useState({ name: "", email: "", role: "Employee" });
+    const [inviteForm, setInviteForm] = useState({ name: "", email: "", password: "" });
 
-    const handleSendInvite = (e) => {
+    const handleGoToRolesPermissions = (e) => {
         e.preventDefault();
-        const inviteLink = `http://${window.location.host}/signup?invite=${btoa(inviteForm.email)}`;
-        alert(`Invite sent successfully!\n\nInvite Link: ${inviteLink}\nSent to: ${inviteForm.name} (${inviteForm.email}) as ${inviteForm.role}`);
+        if (!inviteForm.name.trim() || !inviteForm.email.trim() || !inviteForm.password.trim()) {
+            alert("Please fill in Full Name, Email, and Password before proceeding.");
+            return;
+        }
+        // Store the pending invite data so RBAC can pick it up
+        sessionStorage.setItem("pendingInvite", JSON.stringify(inviteForm));
         setShowInviteModal(false);
-        setInviteForm({ name: "", email: "", role: "Employee" });
+        // Navigate to RBAC (Roles & Permissions) page
+        if (typeof setActive === "function") {
+            setActive("RBAC");
+        }
     };
 
     if (loading) {
@@ -202,13 +228,13 @@ export const Team = ({ branch }) => {
             {showInviteModal && (
                 <div className={styles.modalOverlay} onClick={() => setShowInviteModal(false)}>
                     <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-                        <h3 className={styles.modalTitle}>Invite New Member</h3>
-                        <form onSubmit={handleSendInvite} className={styles.form}>
+                        <h3 className={styles.modalTitle}>Add New Member</h3>
+                        <form onSubmit={handleGoToRolesPermissions} className={styles.form}>
                             <div className={styles.formGroup}>
                                 <label>Full Name</label>
                                 <input
                                     type="text"
-                                    placeholder="Enter name"
+                                    placeholder="Enter full name"
                                     required
                                     value={inviteForm.name}
                                     onChange={e => setInviteForm({ ...inviteForm, name: e.target.value })}
@@ -225,22 +251,21 @@ export const Team = ({ branch }) => {
                                 />
                             </div>
                             <div className={styles.formGroup}>
-                                <label>Role</label>
-                                <select
-                                    value={inviteForm.role}
-                                    onChange={e => setInviteForm({ ...inviteForm, role: e.target.value })}
-                                >
-                                    <option value="Admin">Admin</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Employee">Employee</option>
-                                </select>
+                                <label>Password <span style={{fontSize:'0.75rem', color:'#6b7280'}}>(will be sent to employee via email)</span></label>
+                                <input
+                                    type="text"
+                                    placeholder="Set a temporary password"
+                                    required
+                                    value={inviteForm.password}
+                                    onChange={e => setInviteForm({ ...inviteForm, password: e.target.value })}
+                                />
                             </div>
                             <div className={styles.modalActions}>
                                 <button type="button" onClick={() => setShowInviteModal(false)} className={styles.cancelBtn}>
                                     Cancel
                                 </button>
                                 <button type="submit" className={styles.saveBtn}>
-                                    Send Invite Link
+                                    Roles &amp; Permissions →
                                 </button>
                             </div>
                         </form>
@@ -284,7 +309,7 @@ export const Team = ({ branch }) => {
                             <th>Member</th>
                             <th>Role</th>
                             <th>Status</th>
-                            <th>Contact</th>
+                            <th>Location</th>
                             <th>Activity</th>
                             <th></th>
                         </tr>
@@ -321,9 +346,8 @@ export const Team = ({ branch }) => {
                                     </div>
                                 </td>
                                 <td>
-                                    <div className={styles.contactIcons}>
-                                        <Mail size={14} title={member.email} />
-                                        <Phone size={14} title={member.phone} />
+                                    <div className={styles.locationText}>
+                                        {member.location}
                                     </div>
                                 </td>
                                 <td>
