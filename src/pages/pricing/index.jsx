@@ -4,8 +4,12 @@ import styles from "./pricing.module.css";
 import { NavLink, useNavigate } from "react-router-dom";
 
 export default function Pricing() {
-
     const navigate = useNavigate();
+    const pricingRef = React.useRef(null);
+
+    const scrollToPricing = () => {
+        pricingRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
     const plans = [
         {
@@ -121,7 +125,7 @@ export default function Pricing() {
 
 
             {/* ----- Pricing ----- */}
-            <section className={styles.pricingSection}>
+            <section className={styles.pricingSection} ref={pricingRef}>
 
                 <div className={styles.headingWrap}>
                     <span className={styles.label}>Simple & Transparent Pricing</span>
@@ -155,7 +159,7 @@ export default function Pricing() {
                                 ))}
                             </ul>
 
-                            <button className={styles.cta}>Get Started</button>
+                            <button className={styles.cta} onClick={() => navigate("/signUp")}>Get Started</button>
                         </div>
                     ))}
                 </div>
@@ -295,8 +299,8 @@ export default function Pricing() {
                 <p>Start using RVH CRM in minutes.</p>
 
                 <div className={styles.pricingFinalActions}>
-                    <button className={styles.pricingPrimaryBtn}>Start Free Trial</button>
-                    <button className={styles.pricingGhostBtn}>See Pricing</button>
+                    <button className={styles.pricingPrimaryBtn} onClick={() => navigate("/signUp")}>Start Free Trial</button>
+                    <button className={styles.pricingGhostBtn} onClick={scrollToPricing}>See Pricing</button>
                 </div>
             </section>
 

@@ -226,6 +226,7 @@
   margin-bottom: 1rem;
   background: linear-gradient(90deg, #f82f88, #f1965f);
   -webkit-background-clip: text;
+  background-clip: text; /* standard property */
   -webkit-text-fill-color: transparent;
 }
 
@@ -275,16 +276,27 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
-  align-items: center;
+  align-items: stretch; /* Stretch children to fill card height */
   backdrop-filter: blur(14px);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
   animation: fadeUp 0.45s ease;
+  min-height: 560px; /* Fixed consistent height for all tabs */
 }
 
 /* Left */
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .cardContent h3 {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  margin-bottom: 1.2rem;
+  background: linear-gradient(90deg, #ffffff, #d6d9ff);
+  -webkit-background-clip: text;
+  background-clip: text; /* standard property */
+  -webkit-text-fill-color: transparent;
 }
 
 .cardContent p {
@@ -297,7 +309,8 @@
 .cta {
   background: white;
   color: #0b0e17;
-  padding: 0.7rem 1.6rem;
+  padding: 0.7rem 20px;
+  width: fit-content;
   border-radius: 999px;
   border: none;
   cursor: pointer;
@@ -316,12 +329,19 @@
 .cardVisual {
   display: flex;
   justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .cardVisual img {
   width: 100%;
-  max-width: 420px;
-  border-radius: 16px;
+  height: 100%;
+  max-height: 380px;
+  object-fit: cover; /* Ensures image fills space without stretching */
+  border-radius: 0; /* Let container handle border-radius */
 }
 
 /* Anim */
@@ -498,6 +518,7 @@
 .featureHighlightsHeader h2 span {
   background: linear-gradient(135deg, #f82f88, #f1965f);
   -webkit-background-clip: text;
+  background-clip: text; /* standard property */
   -webkit-text-fill-color: transparent;
 }
 

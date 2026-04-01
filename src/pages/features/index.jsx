@@ -150,7 +150,15 @@ export default function Features() {
             <h3>{current.title}</h3>
             <p>{current.desc}</p>
 
-            <button className={styles.cta}>Explore Feature</button>
+            <button 
+              className={styles.cta} 
+              onClick={() => {
+                navigate("/");
+                window.scrollTo(0, 0);
+              }}
+            >
+              Explore Feature
+            </button>
           </div>
 
           {/* Right */}
@@ -241,10 +249,10 @@ export default function Features() {
           </p>
 
           <div className={styles.featuresCtaActions}>
-            <button className={styles.featuresCtaPrimary}>
+            <button className={styles.featuresCtaPrimary} onClick={() => navigate("/signUp")}>
               Start Free Trial
             </button>
-            <button className={styles.featuresCtaSecondary}>
+            <button className={styles.featuresCtaSecondary} onClick={() => navigate("/signUp")}>
               Request Demo
             </button>
           </div>

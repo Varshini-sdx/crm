@@ -166,6 +166,44 @@ const plans = [
 
 
 
+const revealVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { 
+        opacity: 1, 
+        y: 0,
+        transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } 
+    }
+};
+
+const slideInLeft = {
+    hidden: { opacity: 0, x: -60 },
+    visible: { 
+        opacity: 1, 
+        x: 0,
+        transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] } 
+    }
+};
+
+const slideInRight = {
+    hidden: { opacity: 0, x: 60 },
+    visible: { 
+        opacity: 1, 
+        x: 0,
+        transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] } 
+    }
+};
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.15,
+            delayChildren: 0.1
+        }
+    }
+};
+
 export default function Home() {
 
     const navigate = useNavigate();
@@ -179,26 +217,7 @@ export default function Home() {
     const featuresRef = useRef(null);
 
 
-    /* Header Animation variants */
-    useEffect(() => {
-        const reveals = document.querySelectorAll(`.${styles.reveal}`);
-
-        const observer = new IntersectionObserver(
-            entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add(styles.show);
-
-                    }
-                });
-            },
-            { threshold: 0.2 }
-        );
-
-        reveals.forEach(el => observer.observe(el));
-
-        return () => observer.disconnect();
-    }, []);
+    /* Scroll logic moved to Framer Motion */
 
 
 
@@ -230,20 +249,7 @@ export default function Home() {
 
 
 
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add(styles.show);
-                }
-            },
-            { threshold: 0.25 }
-        );
-
-        if (brandsRef.current) observer.observe(brandsRef.current);
-
-        return () => observer.disconnect();
-    }, []);
+    /* Brands entry handled by Framer Motion section wrapper */
 
     /* why us scroll */
 
@@ -321,7 +327,13 @@ export default function Home() {
             </nav>
 
             {/* ----- Header ---------- */}
-            <section className={styles.hero} ref={heroRef}>
+            <motion.section 
+                className={styles.hero} 
+                ref={heroRef}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+            >
                 {/* Background */}
                 <div className={styles.gradientBg}></div>
                 <div className={styles.whiteTint}></div>
@@ -347,25 +359,31 @@ export default function Home() {
 
                 {/*----- Hero Content ----- */}
                 <div className={styles.heroContent} ref={contentRef}>
-                    <h1 className={styles.reveal}>
+                    <motion.h1 variants={revealVariants}>
                         Control Your <span>Leads</span>, Teams & Growth
-                    </h1>
+                    </motion.h1>
 
-                    <p className={styles.reveal}>
+                    <motion.p variants={revealVariants}>
                         A modern CRM built for startups and scaling businesses — automate
                         lead distribution, track performance, and grow with clarity.
-                    </p>
+                    </motion.p>
 
-                    <div className={`${styles.actions} ${styles.reveal}`}>
-                        <button className={styles.primaryBtn}>Start Free Trial</button>
-                        <button className={styles.secondaryBtn}>Watch Demo</button>
-                    </div>
+                    <motion.div 
+                        className={styles.actions}
+                        variants={revealVariants}
+                    >
+                        <button className={styles.primaryBtn} onClick={() => navigate("/signUp")}>Start Free Trial</button>
+                        <button className={styles.secondaryBtn} onClick={() => navigate("/signUp")}>Watch Demo</button>
+                    </motion.div>
 
                     {/* Divider */}
-                    <div className={`${styles.divider} ${styles.reveal}`}></div>
+                    <div className={styles.divider}></div>
 
                     {/* Stats */}
-                    <div className={`${styles.stats} ${styles.reveal}`}>
+                    <motion.div 
+                        className={styles.stats}
+                        variants={revealVariants}
+                    >
                         <div className={styles.statItem}>
                             <h3>10,000+</h3>
                             <span>Active Users</span>
@@ -380,12 +398,19 @@ export default function Home() {
                             <h3>4.9/5</h3>
                             <span>Customer Rating</span>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* ------ BRANDS ----- */}
-            <section className={styles.brandsSection} ref={brandsRef}>
+            <motion.section 
+                className={styles.brandsSection} 
+                ref={brandsRef}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={revealVariants}
+            >
 
                 <h2>
                     Trusted by <span>100+</span> companies worldwide
@@ -407,14 +432,20 @@ export default function Home() {
                         </div>
                     ))}
                 </div>
-            </section>
+            </motion.section>
 
 
             {/* -------- WHY THIS CRM SECTION -----------*/}
-            <section ref={ref} className={styles.whySection}>
-                <div
-                    className={`${styles.whyHeader} ${styles.revealBase} ${showContent ? styles.revealUp : ""
-                        }`}
+            <motion.section 
+                ref={ref} 
+                className={styles.whySection}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+            >
+                <motion.div
+                    className={styles.whyHeader}
+                    variants={revealVariants}
                 >
                     <h2>
                         Why this <span>CRM?</span>
@@ -423,22 +454,22 @@ export default function Home() {
                         Everything your team needs to manage leads, automate workflows,
                         and close deals — all in one place.
                     </p>
-                </div>
+                </motion.div>
 
                 <div className={styles.whyContent}>
                     {/* LEFT IMAGE */}
-                    <div
-                        className={`${styles.whyImageWrap} ${styles.revealBase} ${styles.fromLeft} ${showContent ? styles.revealLeft : ""
-                            }`}
+                    <motion.div
+                        className={styles.whyImageWrap}
+                        variants={slideInLeft}
                     >
 
                         <img src={whyUs} alt="CRM in action" />
-                    </div>
+                    </motion.div>
 
                     {/* RIGHT CARDS */}
-                    <div
-                        className={`${styles.whyCards} ${styles.revealBase} ${styles.fromRight} ${showContent ? styles.revealRight : ""
-                            }`}
+                    <motion.div
+                        className={styles.whyCards}
+                        variants={slideInRight}
                     >
                         <div className={styles.whyCard}>
                             <div className={styles.iconWrap}>
@@ -485,19 +516,23 @@ export default function Home() {
                             </p>
                         </div>
 
-                        <button className={styles.demoBtn}>
+                        <button className={styles.demoBtn} onClick={() => navigate("/signUp")}>
                             Book a Live Demo →
                         </button>
-                    </div>
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
 
 
             {/* -------- Features ------- */}
-            <section
+            <motion.section
                 id="features-section"
                 ref={featuresRef}
                 className={styles.featuresSection}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={revealVariants}
             >
 
                 {/* Heading */}
@@ -544,11 +579,17 @@ export default function Home() {
                     </div>
                 </div>
 
-            </section>
+            </motion.section>
 
 
             {/* --------- Testimonials --------- */}
-            <section className={styles.testimonialsSection}>
+            <motion.section 
+                className={styles.testimonialsSection}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={revealVariants}
+            >
 
                 <div className={styles.testimonialHeader}>
                     <span className={styles.label}>What people say</span>
@@ -582,11 +623,18 @@ export default function Home() {
                         ))}
                     </div>
                 </div>
-            </section>
+            </motion.section>
 
 
             {/* ---- Pricing ------ */}
-            <section className={styles.pricingSection}>
+            <motion.section 
+                className={styles.pricingSection}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                variants={containerVariants}
+            >
+                <div className={styles.pricingGradientBg}></div>
 
                 <div className={styles.headingWrap}>
                     <span className={styles.label}>Pricing</span>
@@ -599,10 +647,11 @@ export default function Home() {
                 {/* Cards */}
                 <div className={styles.pricingGrid}>
                     {plans.map((plan, index) => (
-                        <div
+                        <motion.div
                             key={index}
                             className={`${styles.card} ${plan.featured ? styles.featured : ""
                                 }`}
+                            variants={revealVariants}
                         >
                             {plan.featured && (
                                 <div className={styles.badge}>Most Popular</div>
@@ -623,13 +672,14 @@ export default function Home() {
                             <button
                                 className={`${styles.cta} ${plan.featured ? styles.primary : ""
                                     }`}
+                                onClick={() => navigate(plan.enterprise ? "/contact" : "/signUp")}
                             >
                                 {plan.enterprise ? "Contact Sales" : "Get Started"}
                             </button>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
-            </section>
+            </motion.section>
 
             {/* ---- Footer ------ */}
             <footer className={styles.footer}>
