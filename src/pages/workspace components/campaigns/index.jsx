@@ -149,9 +149,11 @@ export const Campaigns = ({ branch }) => {
             if (campaignList.length > 0) {
                 const mapped = campaignList.map(c => ({
                     ...c,
-                    color: getColorForChannel(c.channel),
-                    month: c.month || currentMonth,
-                    year: c.year || currentYear
+                    // Map snake_case fields to camelCase
+                    whatsappConfig: c.whatsappConfig || c.whatsapp_config,
+                    month: Number(c.month) || currentMonth,
+                    year: Number(c.year) || currentYear,
+                    color: getColorForChannel(c.channel)
                 }));
                 setCampaigns(mapped);
                 console.log("%c[CAMPAIGNS] Loaded:", "color: #3b82f6; font-weight: bold;", mapped);
@@ -197,8 +199,10 @@ export const Campaigns = ({ branch }) => {
         };
         try {
             const created = await landingPageService.createLandingPage(newPage);
-            setLandingPages([...landingPages, created]);
-            setActiveLanding(created);
+            // Merge with newPage to ensure all fields are present even if backend omits some
+            const merged = { ...newPage, ...created };
+            setLandingPages(prev => [merged, ...prev]);
+            setActiveLanding(merged);
             setTimeout(() => {
                 editorRef.current?.scrollIntoView({ behavior: "smooth" });
             }, 100);
@@ -214,6 +218,7 @@ export const Campaigns = ({ branch }) => {
             const updated = await landingPageService.updateLandingPage(activeLanding.id, activeLanding);
             setLandingPages(prev => prev.map((lp) => (lp.id === updated.id ? updated : lp)));
             alert("Landing page updated successfully!");
+            setActiveLanding(null); // Close the editor after save
         } catch (error) {
             console.error("Error updating landing page:", error);
             alert("Failed to update landing page");
@@ -250,6 +255,7 @@ export const Campaigns = ({ branch }) => {
                 month: createFormData.month,
                 year: createFormData.year,
                 branch_id: branch?.id || 1,
+                whatsapp_config: createFormData.channel === "WhatsApp" ? whatsappConfig : null,
                 whatsappConfig: createFormData.channel === "WhatsApp" ? whatsappConfig : null,
             };
 
@@ -393,6 +399,7 @@ export const Campaigns = ({ branch }) => {
                 channel: editFormData.channel,
                 month: editFormData.month,
                 year: editFormData.year,
+                whatsapp_config: editFormData.channel === "WhatsApp" ? whatsappConfig : null,
                 whatsappConfig: editFormData.channel === "WhatsApp" ? whatsappConfig : null,
                 config: editFormData.channel !== "WhatsApp" ? campaignConfig : null,
             };
@@ -415,9 +422,9 @@ export const Campaigns = ({ branch }) => {
     };
 
     /* ---------------- FILTERING & PAGINATION ---------------- */
-    // First filter by month and year
+    // First filter by month and year (ensure numeric comparison)
     const monthYearFiltered = campaigns.filter(
-        (c) => c.month === selectedMonth && c.year === selectedYear
+        (c) => Number(c.month) === Number(selectedMonth) && Number(c.year) === Number(selectedYear)
     );
 
     // Then filter by channel
@@ -1265,6 +1272,7 @@ export const Campaigns = ({ branch }) => {
                                     const saved = await landingPageService.updateLandingPage(updated.id, updated);
                                     setLandingPages(prev => prev.map((lp) => (lp.id === saved.id ? saved : lp)));
                                     alert("Landing page published successfully!");
+                                    setActiveLanding(null); // Close the editor after publish
                                 } catch (error) {
                                     console.error("Error publishing landing page:", error);
                                     alert("Failed to publish landing page");

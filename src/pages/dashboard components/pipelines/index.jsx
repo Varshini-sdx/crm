@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { Plus, MoreHorizontal, Zap, TrendingUp, DollarSign, Target, Clock, ArrowUpRight, X, ClipboardList, FileText, Trash2, Download, Paperclip } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import api from "@/api/axios";
+import { Plus, MoreHorizontal, Zap, TrendingUp, DollarSign, Target, Clock, ArrowUpRight, X, ClipboardList, FileText, Trash2, Download, Paperclip, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import styles from "./pipelines.module.css";
 
@@ -10,87 +11,7 @@ const PIPELINE_TABS = [
     { label: "Enterprise", type: "enterprise" }
 ];
 
-const mockPipelinesData = {
-    deals: [
-        {
-            id: "Proposal", title: "Proposal", count: 3,
-            deals: [
-                { id: 1, title: "Acme Corp Expansion", company: "Acme Corp", value: "₹2,50,000", date: "Mar 12" },
-                { id: 2, title: "Global Tech Integration", company: "Global Tech", value: "₹4,80,000", date: "Mar 15" },
-            ]
-        },
-        {
-            id: "Negotiation", title: "Negotiation", count: 1,
-            deals: [{ id: 3, title: "Nexus Software License", company: "Nexus Sw", value: "₹1,20,000", date: "Mar 10" }]
-        },
-        {
-            id: "Won", title: "Won", count: 1,
-            deals: [{ id: 5, title: "Infinite Loop R&D", company: "Apple", value: "₹12,00,000", date: "Feb 28" }]
-        },
-        {
-            id: "Lost", title: "Lost", count: 1,
-            deals: [{ id: 9, title: "Legacy System Sync", company: "Wayne Corp", value: "₹90,000", date: "Mar 05" }]
-        }
-    ],
-    sales: [
-        {
-            id: "Proposal", title: "Proposal", count: 2,
-            deals: [
-                { id: 101, title: "Bulk Hardware Order", company: "Tech Flow", value: "₹1,50,000", date: "Mar 20" },
-                { id: 102, title: "Retail Soft Launch", company: "Soft Mart", value: "₹80,000", date: "Mar 22" },
-            ]
-        },
-        {
-            id: "Negotiation", title: "Negotiation", count: 1,
-            deals: [{ id: 103, title: "Distribution Deal", company: "Logi Co", value: "₹5,00,000", date: "Mar 18" }]
-        },
-        {
-            id: "Won", title: "Won", count: 1,
-            deals: [{ id: 104, title: "Annual Support", company: "Cloud X", value: "₹2,00,000", date: "Mar 05" }]
-        },
-        {
-            id: "Lost", title: "Lost", count: 1,
-            deals: [{ id: 105, title: "Prototype Phase", company: "Proto Inc", value: "₹45,000", date: "Feb 20" }]
-        }
-    ],
-    partnership: [
-        {
-            id: "Proposal", title: "Proposal", count: 1,
-            deals: [{ id: 201, title: "Affiliate Expansion", company: "Partner Pro", value: "₹1,00,000", date: "Mar 25" }]
-        },
-        {
-            id: "Negotiation", title: "Negotiation", count: 1,
-            deals: [{ id: 202, title: "Exclusive Rights", company: "Global Media", value: "₹25,00,000", date: "Mar 15" }]
-        },
-        {
-            id: "Won", title: "Won", count: 1,
-            deals: [{ id: 203, title: "Joint Venture Launch", company: "Venture Corp", value: "₹50,00,000", date: "Mar 01" }]
-        },
-        {
-            id: "Lost", title: "Lost", count: 1,
-            deals: [{ id: 204, title: "Content Licensing", company: "Stream Plus", value: "₹5,00,000", date: "Jan 15" }]
-        }
-    ],
-    enterprise: [
-        {
-            id: "Proposal", title: "Proposal", count: 1,
-            deals: [{ id: 301, title: "Govt Infrastructure", company: "National IT", value: "₹1,50,00,000", date: "Mar 30" }]
-        },
-        {
-            id: "Negotiation", title: "Negotiation", count: 1,
-            deals: [{ id: 302, title: "Global ERP Sync", company: "Mega Corp", value: "₹85,00,000", date: "Mar 12" }]
-        },
-        {
-            id: "Won", title: "Won", count: 1,
-            deals: [{ id: 303, title: "Mainframe Upgrade", company: "IBM Legacy", value: "₹2,00,00,000", date: "Feb 10" }]
-        },
-        {
-            id: "Lost", title: "Lost", count: 1,
-            deals: [{ id: 304, title: "Security Audit", company: "Safe Guard", value: "₹20,00,000", date: "Dec 05" }]
-        }
-    ]
-};
-
+// --- Static Funnel Data (As requested, not tied to deals) ---
 const leadsFunnelData = [
     { label: "Awareness", value: "1,250", color: "linear-gradient(135deg, #6366f1, #818cf8)", width: "100%" },
     { label: "Interest", value: "840", color: "linear-gradient(135deg, #8b5cf6, #a78bfa)", width: "85%" },
@@ -124,13 +45,52 @@ const itemVariants = {
 
 export default function Pipelines() {
     const [activeTab, setActiveTab] = useState(PIPELINE_TABS[0]);
-    const [stages, setStages] = useState(mockPipelinesData.deals);
+    const [stages, setStages] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    // Sync stages with active tab
-    React.useEffect(() => {
-        const data = mockPipelinesData[activeTab.type] || [];
-        setStages(data);
-        console.log(`%c[PIPELINES] Using dummy data for ${activeTab.label} (Backend integration pending)`, "color: #ff9800; font-weight: bold;");
+    // Fetch Pipeline Data
+    const fetchPipelineData = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
+            // Calling the same endpoint as the Deals page
+            const res = await api.get(`/api/dashboard/pipeline?type=${activeTab.type}`, { headers });
+            const rawData = res.data || {};
+
+            // Transform backend object { proposal: [], ... } into array for UI [{ id: 'proposal', title: 'Proposal', deals: [] }, ...]
+            const formatted = [
+                { id: "Proposal", title: "Proposal", deals: Array.isArray(rawData.proposal) ? rawData.proposal : [] },
+                { id: "Negotiation", title: "Negotiation", deals: Array.isArray(rawData.negotiation) ? rawData.negotiation : [] },
+                { id: "Won", title: "Won", deals: Array.isArray(rawData.won) ? rawData.won : [] },
+                { id: "Lost", title: "Lost", deals: Array.isArray(rawData.lost) ? rawData.lost : [] }
+            ];
+
+            // Normalize deal fields for the UI (title vs deal_name)
+            const normalized = formatted.map(stage => ({
+                ...stage,
+                deals: stage.deals.map(d => ({
+                    ...d,
+                    id: d.id || d._id,
+                    title: d.title || d.deal_name || "Untitled Deal",
+                    company: d.company || "Unknown Company",
+                    value: d.value ? (typeof d.value === 'string' && d.value.includes('₹') ? d.value : `₹${Number(d.value).toLocaleString()}`) : "₹0",
+                    date: d.date || d.close || "No date"
+                }))
+            }));
+
+            setStages(normalized);
+        } catch (error) {
+            console.error("Error fetching pipeline data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Sync stages with activity and tab
+    useEffect(() => {
+        fetchPipelineData();
     }, [activeTab]);
 
     // Automation Rules State
@@ -341,57 +301,7 @@ export default function Pipelines() {
                 </div>
             </motion.div>
 
-            <motion.div className={styles.pipelineHeader} variants={itemVariants}>
-                <h2>Pipelines</h2>
-            </motion.div>
-
-            {/* Pipeline Category Pills */}
-            <motion.div className={styles.pipelineTabs} variants={itemVariants}>
-                {PIPELINE_TABS.map(tab => (
-                    <button
-                        key={tab.type}
-                        onClick={() => setActiveTab(tab)}
-                        className={`${styles.pipelineTab} ${activeTab.type === tab.type ? styles.activeTab : ""}`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </motion.div>
-
-
-            {/* Kanban Board Section */}
-            <motion.div className={styles.kanbanBoard} variants={itemVariants}>
-                {stages.map((stage) => (
-                    <div key={stage.id} className={`${styles.kanbanColumn} ${styles[stage.id]}`}>
-                        <div className={styles.columnHeader}>
-                            <h3>{stage.title}</h3>
-                            <span className={styles.countBadge}>{stage.deals.length}</span>
-                        </div>
-                        <div className={styles.cardContainer}>
-                            {stage.deals.map((deal) => (
-                                <motion.div
-                                    key={deal.id}
-                                    className={styles.card}
-                                    whileHover={{ y: -4, boxShadow: "0 12px 24px rgba(0,0,0,0.08)" }}
-                                    onClick={() => handleCardClick(deal)}
-                                >
-                                    <div className={styles.cardTop}>
-                                        <strong className={styles.cardTitle}>{deal.title}</strong>
-                                        <button className={styles.moreBtn} onClick={(e) => { e.stopPropagation(); }}><MoreHorizontal size={14} /></button>
-                                    </div>
-                                    <span className={styles.pipelineCompany}>{deal.company}</span>
-                                    <div className={styles.cardMeta}>
-                                        <span className={styles.value}>{deal.value}</span>
-                                        <span className={styles.contact}>{deal.date}</span>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </motion.div>
-
-            {/* Leads Pipeline Funnel Section */}
+            {/* Leads Pipeline Funnel Section (Moved Above) */}
             <motion.div className={styles.leadsFunnelSection} variants={itemVariants}>
                 <div className={styles.funnelHeader}>
                     <div className={styles.funnelTitleGroup}>
@@ -427,6 +337,55 @@ export default function Pipelines() {
                         </div>
                     ))}
                 </div>
+            </motion.div>
+
+            <motion.div className={styles.pipelineHeader} variants={itemVariants}>
+                <h2>Pipelines</h2>
+            </motion.div>
+
+            {/* Pipeline Category Pills */}
+            <motion.div className={styles.pipelineTabs} variants={itemVariants}>
+                {PIPELINE_TABS.map(tab => (
+                    <button
+                        key={tab.type}
+                        onClick={() => setActiveTab(tab)}
+                        className={`${styles.pipelineTab} ${activeTab.type === tab.type ? styles.activeTab : ""}`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </motion.div>
+
+            {/* Kanban Board Section */}
+            <motion.div className={styles.kanbanBoard} variants={itemVariants}>
+                {stages.map((stage) => (
+                    <div key={stage.id} className={`${styles.kanbanColumn} ${styles[stage.id]}`}>
+                        <div className={styles.columnHeader}>
+                            <h3>{stage.title}</h3>
+                            <span className={styles.countBadge}>{stage.deals.length}</span>
+                        </div>
+                        <div className={styles.cardContainer}>
+                            {stage.deals.map((deal) => (
+                                <motion.div
+                                    key={deal.id}
+                                    className={styles.card}
+                                    whileHover={{ y: -4, boxShadow: "0 12px 24px rgba(0,0,0,0.08)" }}
+                                    onClick={() => handleCardClick(deal)}
+                                >
+                                    <div className={styles.cardTop}>
+                                        <strong className={styles.cardTitle}>{deal.title}</strong>
+                                        <button className={styles.moreBtn} onClick={(e) => { e.stopPropagation(); }}><MoreHorizontal size={14} /></button>
+                                    </div>
+                                    <span className={styles.pipelineCompany}>{deal.company}</span>
+                                    <div className={styles.cardMeta}>
+                                        <span className={styles.value}>{deal.value}</span>
+                                        <span className={styles.contact}>{deal.date}</span>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
             </motion.div>
 
             {/* Rule Modal */}

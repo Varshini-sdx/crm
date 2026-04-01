@@ -56,10 +56,12 @@ const mockMarketingData = {
 };
 
 const isValidMarketingData = (d) =>
-    d && d.kpis && d.kpis.totalCampaigns && d.kpis.leadsGenerated &&
-    d.kpis.conversionRate && d.kpis.totalRevenue &&
-    Array.isArray(d.trendData) && Array.isArray(d.funnelData) &&
-    Array.isArray(d.channels) && Array.isArray(d.campaigns);
+    d && d.kpis && 
+    (d.kpis.totalCampaigns || d.kpis.total_campaigns) &&
+    Array.isArray(d.trendData || d.trend_data || []) &&
+    Array.isArray(d.funnelData || d.funnel_data || []) &&
+    Array.isArray(d.channels || d.lead_sources || []) &&
+    Array.isArray(d.campaigns || d.campaign_performance || []);
 
 export const Marketing = () => {
     // Always start with mock data so the page renders immediately
@@ -77,8 +79,29 @@ export const Marketing = () => {
             });
 
             if (isValidMarketingData(response.data)) {
-                setData(response.data);
-                console.log("✅ Marketing: loaded live data from backend.");
+                const d = response.data;
+                const normalized = {
+                    kpis: {
+                        totalCampaigns: d.kpis.totalCampaigns || d.kpis.total_campaigns || { value: 0, growth: "0%" },
+                        leadsGenerated: d.kpis.leadsGenerated || d.kpis.leads_generated || { value: 0, growth: "0%" },
+                        conversionRate: d.kpis.conversionRate || d.kpis.conversion_rate || { value: 0, growth: "0%" },
+                        totalRevenue: d.kpis.totalRevenue || d.kpis.total_revenue || { value: 0, growth: "0%" }
+                    },
+                    trendData: d.trendData || d.trend_data || [],
+                    funnelData: d.funnelData || d.funnel_data || [],
+                    channels: (d.channels || d.lead_sources || []).map(c => ({
+                        ...c,
+                        name: c.name || c.label || "Unknown",
+                        leads: c.leads || c.leads_count || 0
+                    })),
+                    campaigns: (d.campaigns || d.campaign_performance || []).map(c => ({
+                        ...c,
+                        name: c.name || c.title || "Unnamed",
+                        leads: c.leads || c.leads_count || 0
+                    }))
+                };
+                setData(normalized);
+                console.log("✅ Marketing: loaded live data from backend (normalized).");
             } else {
                 console.warn("⚠️ Marketing: backend response missing expected fields – showing demo data.", response.data);
             }

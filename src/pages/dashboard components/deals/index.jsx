@@ -91,6 +91,15 @@ export default function Deals({ branch }) {
     pipeline: ""
   });
 
+  const [monthlyTarget, setMonthlyTarget] = useState(() => {
+    return localStorage.getItem("crm_monthly_target") || "";
+  });
+  const [isTargetSet, setIsTargetSet] = useState(() => {
+    return !!localStorage.getItem("crm_monthly_target");
+  });
+  const [savingTarget, setSavingTarget] = useState(false);
+  const [isEditingTarget, setIsEditingTarget] = useState(false);
+
   // Fetch Data
   const fetchData = async () => {
     try {
@@ -282,6 +291,36 @@ export default function Deals({ branch }) {
     URL.revokeObjectURL(url);
   };
 
+  const handleSaveTarget = async () => {
+    if (!monthlyTarget) return;
+    try {
+      setSavingTarget(true);
+      // Save to localStorage for frontend persistence
+      localStorage.setItem("crm_monthly_target", monthlyTarget);
+      
+      // Keep potential API call commented out for future integration
+      /*
+      const token = localStorage.getItem("token");
+      await api.post("/api/analytics/targets", {
+        target_value: monthlyTarget,
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear()
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      */
+      
+      setIsTargetSet(true);
+      setIsEditingTarget(false);
+      alert("Monthly target updated successfully!");
+    } catch (error) {
+      console.error("Error saving target:", error);
+      alert("Failed to save target. Please try again.");
+    } finally {
+      setSavingTarget(false);
+    }
+  };
+
   const handleAddRule = () => {
     setEditingRuleId(null);
     setRuleForm({ trigger: "", actions: "", active: true });
@@ -398,6 +437,66 @@ export default function Deals({ branch }) {
         <button className={styles.exportBtn} onClick={handleExportDeals}>
           Export Deals
         </button>
+      </div>
+
+      {/* Target Section */}
+      <div className={styles.targetSection}>
+        <div className={styles.targetText}>
+          <h3>Set Monthly Team Target</h3>
+          <p>
+            Enter the revenue goal for this month to track team performance in reports.
+          </p>
+        </div>
+
+        <div className={styles.targetActions}>
+          {isTargetSet && !isEditingTarget ? (
+            <>
+              <div className={styles.targetValueDisplay}>
+                <span>This Month's Target</span>
+                <strong className={styles.targetHighlight}>
+                  ₹{Number(monthlyTarget).toLocaleString()}
+                </strong>
+                <button 
+                  className={styles.editIconBtn} 
+                  onClick={() => setIsEditingTarget(true)}
+                  title="Edit Target"
+                >
+                  ✏️
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <input
+                type="number"
+                className={styles.targetInput}
+                placeholder="e.g. 5000000"
+                value={monthlyTarget}
+                onChange={(e) => setMonthlyTarget(e.target.value)}
+                autoFocus={isEditingTarget}
+              />
+              <button
+                className={styles.saveTargetBtn}
+                onClick={handleSaveTarget}
+                disabled={savingTarget}
+              >
+                {savingTarget ? "Saving..." : (isEditingTarget ? "Save Changes" : "Set Target")}
+              </button>
+              {isEditingTarget && (
+                <button 
+                  className={styles.cancelBtn} 
+                  onClick={() => {
+                    setMonthlyTarget(localStorage.getItem("crm_monthly_target") || "");
+                    setIsEditingTarget(false);
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#166534', cursor: 'pointer', fontSize: '13px', textDecoration: 'underline' }}
+                >
+                  Cancel
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
 

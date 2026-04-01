@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Home, Features, Pricing, Contact, SignUp, Otp, Login, ForgotPassword, ResetOtp, ChangePassword, OrganisationSetup, Dashboard } from "./pages";
+import { Home, Features, Pricing, Contact, SignUp, Otp, Login, ForgotPassword, ResetOtp, ChangePassword, OrganisationSetup, Dashboard, Demo } from "./pages";
 import "./App.css";
 
 function App() {
@@ -19,6 +19,7 @@ function App() {
 
       <Route path="/organisation-setup" element={<OrganisationSetup />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/demo" element={<Demo />} />
 
 
 

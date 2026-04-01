@@ -71,9 +71,11 @@ export const WebsiteConversion = ({ branch }) => {
             setStats(statData);
             setTrends(trendData);
             setSubmissions(subData);
+            setError(null);
+            console.log("%c[CONVERSION] Backend Integrated Successfully ✅", "color: #10b981; font-weight: bold;");
         } catch (err) {
             console.error("❌ Website Conversion Fetch Error:", err);
-            setError("Failed to load conversion data. Please try again later.");
+            setError("Failed to load conversion data. Some metrics might be missing.");
         } finally {
             setLoading(false);
         }
@@ -105,8 +107,10 @@ export const WebsiteConversion = ({ branch }) => {
                 conversion: "0%",
             };
             const created = await landingPageService.createLandingPage(newLP);
-            setLandingPages([created, ...landingPages]);
-            setActiveLanding(created);
+            // Merge with newLP to ensure all fields are present even if backend omits some
+            const merged = { ...newLP, ...created };
+            setLandingPages(prev => [merged, ...prev]);
+            setActiveLanding(merged);
             setTimeout(() => {
                 editorRef.current?.scrollIntoView({ behavior: "smooth" });
             }, 100);
@@ -118,8 +122,9 @@ export const WebsiteConversion = ({ branch }) => {
     const handleSaveChanges = async () => {
         try {
             const updated = await landingPageService.updateLandingPage(activeLanding.id, activeLanding);
-            setLandingPages(landingPages.map((lp) => lp.id === updated.id ? updated : lp));
+            setLandingPages(prev => prev.map((lp) => lp.id === updated.id ? updated : lp));
             alert("Landing Page saved successfully.");
+            setActiveLanding(null); // Close the editor after save
         } catch (err) {
             alert("Failed to save landing page.");
         }
@@ -136,7 +141,16 @@ export const WebsiteConversion = ({ branch }) => {
 
     return (
         <div className={styles.conversionPage}>
-            <h1 className={styles.pageTitle}>Website Conversion</h1>
+            <div className={styles.pageHeader}>
+                <h1 className={styles.pageTitle}>Website Conversion</h1>
+                <div className={styles.headerActions}>
+                    {error && (
+                        <button className={styles.retryBtn} onClick={fetchData}>
+                            <Activity size={16} /> Retry Sync
+                        </button>
+                    )}
+                </div>
+            </div>
 
             {/* 1. Conversion Overview */}
             <div className={styles.kpiGrid}>
@@ -292,7 +306,18 @@ export const WebsiteConversion = ({ branch }) => {
 
                                 <button
                                     className={styles.publishBtn}
-                                    onClick={() => setActiveLanding({ ...activeLanding, status: "Published" })}
+                                    onClick={async () => {
+                                        const updated = { ...activeLanding, status: "Published" };
+                                        try {
+                                            const saved = await landingPageService.updateLandingPage(updated.id, updated);
+                                            setLandingPages(prev => prev.map((lp) => lp.id === saved.id ? saved : lp));
+                                            alert("Landing page published successfully!");
+                                            setActiveLanding(null); // Close the editor after publish
+                                        } catch (err) {
+                                            console.error("Error publishing landing page:", err);
+                                            alert("Failed to publish landing page.");
+                                        }
+                                    }}
                                 >
                                     Publish
                                 </button>
@@ -354,20 +379,27 @@ export const WebsiteConversion = ({ branch }) => {
                         <button className={styles.textBtn}>View All</button>
                     </div>
                     <div className={styles.submissionList}>
-                        {(submissions.length > 0 ? submissions : mockSubmissions).map(sub => (
-                            <div key={sub.id} className={styles.subItem}>
-                                <div className={styles.subInfo}>
-                                    <strong>{sub.name}</strong>
-                                    <span>{sub.form}</span>
+                        {submissions.length > 0 ? (
+                            submissions.map(sub => (
+                                <div key={sub.id} className={styles.subItem}>
+                                    <div className={styles.subInfo}>
+                                        <strong>{sub.name}</strong>
+                                        <span>{sub.form}</span>
+                                    </div>
+                                    <div className={styles.subMeta}>
+                                        <span className={styles.time}>{sub.date}</span>
+                                        <span className={`${styles.statusBadge} ${sub.status === 'New' ? styles.statusNew : styles.statusProcessed}`}>
+                                            {sub.status}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className={styles.subMeta}>
-                                    <span className={styles.time}>{sub.date}</span>
-                                    <span className={`${styles.statusBadge} ${sub.status === 'New' ? styles.statusNew : styles.statusProcessed}`}>
-                                        {sub.status}
-                                    </span>
-                                </div>
+                            ))
+                        ) : (
+                            <div className={styles.emptySubmissions}>
+                                <p>No form submissions yet.</p>
+                                <span>Once your landing pages are live, new leads will appear here.</span>
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>
