@@ -60,11 +60,39 @@ export default function Pipelines() {
             const rawData = res.data || {};
 
             // Transform backend object { proposal: [], ... } into array for UI [{ id: 'proposal', title: 'Proposal', deals: [] }, ...]
+            // ✅ Robust Fix: Filter deals by active tab to ensure data separation
+            // Handles both string and object formats for d.pipeline
+            const filterDeals = (deals) => {
+                if (!Array.isArray(deals)) return [];
+                return deals.filter(d => {
+                    // Extract label safely
+                    let dealPipelineValue = d.pipeline;
+                    if (typeof dealPipelineValue === "object" && dealPipelineValue !== null) {
+                        dealPipelineValue = dealPipelineValue.label || dealPipelineValue.type || "";
+                    }
+                    const dealPipeline = String(dealPipelineValue || "").toLowerCase();
+                    
+                    const activeType = activeTab.type.toLowerCase();
+                    const activeLabel = activeTab.label.toLowerCase();
+
+                    // 1. If currently on "Deals Pipeline" tab, it acts as a CATCH-ALL
+                    if (activeType === "deals" || activeLabel === "deals pipeline") {
+                        // Show it if it matches 'deals', is empty, or doesn't match OTHER known tabs
+                        const otherPipelines = ["sales pipeline", "sales", "partnership", "enterprise"];
+                        const matchesOther = otherPipelines.includes(dealPipeline);
+                        return !matchesOther; 
+                    }
+
+                    // 2. For other tabs, only show if it specifically matches
+                    return dealPipeline === activeLabel || dealPipeline === activeType;
+                });
+            };
+
             const formatted = [
-                { id: "Proposal", title: "Proposal", deals: Array.isArray(rawData.proposal) ? rawData.proposal : [] },
-                { id: "Negotiation", title: "Negotiation", deals: Array.isArray(rawData.negotiation) ? rawData.negotiation : [] },
-                { id: "Won", title: "Won", deals: Array.isArray(rawData.won) ? rawData.won : [] },
-                { id: "Lost", title: "Lost", deals: Array.isArray(rawData.lost) ? rawData.lost : [] }
+                { id: "Proposal", title: "Proposal", deals: filterDeals(rawData.proposal) },
+                { id: "Negotiation", title: "Negotiation", deals: filterDeals(rawData.negotiation) },
+                { id: "Won", title: "Won", deals: filterDeals(rawData.won) },
+                { id: "Lost", title: "Lost", deals: filterDeals(rawData.lost) }
             ];
 
             // Normalize deal fields for the UI (title vs deal_name)

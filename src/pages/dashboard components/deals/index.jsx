@@ -110,15 +110,42 @@ export default function Deals({ branch }) {
       // Use the pluralized 'activePipeline.type' for the backend query
       const pipelineRes = await api.get(`/api/dashboard/pipeline?type=${activePipeline.type}`, { headers });
       console.log(`DEALS RAW DATA (${activePipeline.type}):`, pipelineRes.data);
-      
+
       const rawData = pipelineRes.data || {};
-      
+
       // Map data with safety guards
+      // ✅ Robust Fix: Filter deals by active tab to ensure data separation
+      // Handles both string and object formats for d.pipeline
+      const filterDeals = (deals) => {
+        if (!Array.isArray(deals)) return [];
+        return deals.filter(d => {
+          // Extract label safely
+          let dealPipelineValue = d.pipeline;
+          if (typeof dealPipelineValue === "object" && dealPipelineValue !== null) {
+            dealPipelineValue = dealPipelineValue.label || dealPipelineValue.type || "";
+          }
+          const dealPipeline = String(dealPipelineValue || "").toLowerCase();
+
+          const activeType = activePipeline.type.toLowerCase();
+          const activeLabel = activePipeline.label.toLowerCase();
+
+          // 1. If currently on "Deals Pipeline" tab, it acts as a CATCH-ALL
+          if (activeType === "deals" || activeLabel === "deals pipeline") {
+            const otherPipelines = ["sales pipeline", "sales", "partnership", "enterprise"];
+            const matchesOther = otherPipelines.includes(dealPipeline);
+            return !matchesOther;
+          }
+
+          // 2. For other tabs, only show if it specifically matches
+          return dealPipeline === activeLabel || dealPipeline === activeType;
+        });
+      };
+
       const newPipelineMap = {
-        proposal: Array.isArray(rawData.proposal) ? rawData.proposal : [],
-        negotiation: Array.isArray(rawData.negotiation) ? rawData.negotiation : [],
-        won: Array.isArray(rawData.won) ? rawData.won : [],
-        lost: Array.isArray(rawData.lost) ? rawData.lost : []
+        proposal: filterDeals(rawData.proposal),
+        negotiation: filterDeals(rawData.negotiation),
+        won: filterDeals(rawData.won),
+        lost: filterDeals(rawData.lost)
       };
 
       setPipelineMap(newPipelineMap);
@@ -159,12 +186,12 @@ export default function Deals({ branch }) {
 
       setAnalytics({
         // Priorities backend data from the new endpoint if it's in the standard Recharts array format
-        winLoss: Array.isArray(wlData) ? wlData : 
-                 Array.isArray(wlData.data) ? wlData.data : [
-          { name: "Won", value: wlData.won ?? currentWon ?? 12 },
-          { name: "Lost", value: wlData.lost ?? currentLost ?? 5 },
-          { name: "In Progress", value: wlData.progress ?? wlData.negotiation ?? currentProgress ?? 8 }
-        ],
+        winLoss: Array.isArray(wlData) ? wlData :
+          Array.isArray(wlData.data) ? wlData.data : [
+            { name: "Won", value: wlData.won ?? currentWon ?? 12 },
+            { name: "Lost", value: wlData.lost ?? currentLost ?? 5 },
+            { name: "In Progress", value: wlData.progress ?? wlData.negotiation ?? currentProgress ?? 8 }
+          ],
         winReasons: mapReasons(a.winReasons || a.win_reasons),
         lossReasons: mapReasons(a.lossReasons || a.loss_reasons || [
           { label: "Too Expensive", value: 40 },
@@ -261,7 +288,7 @@ export default function Deals({ branch }) {
       value: "",
       owner: "",
       close: "",
-      pipeline: activePipeline
+      pipeline: activePipeline?.label || activePipeline || ""
     });
     setCurrentDealId(null);
   };
@@ -297,7 +324,7 @@ export default function Deals({ branch }) {
       setSavingTarget(true);
       // Save to localStorage for frontend persistence
       localStorage.setItem("crm_monthly_target", monthlyTarget);
-      
+
       // Keep potential API call commented out for future integration
       /*
       const token = localStorage.getItem("token");
@@ -309,7 +336,7 @@ export default function Deals({ branch }) {
         headers: { Authorization: `Bearer ${token}` }
       });
       */
-      
+
       setIsTargetSet(true);
       setIsEditingTarget(false);
       alert("Monthly target updated successfully!");
@@ -456,8 +483,8 @@ export default function Deals({ branch }) {
                 <strong className={styles.targetHighlight}>
                   ₹{Number(monthlyTarget).toLocaleString()}
                 </strong>
-                <button 
-                  className={styles.editIconBtn} 
+                <button
+                  className={styles.editIconBtn}
                   onClick={() => setIsEditingTarget(true)}
                   title="Edit Target"
                 >
@@ -483,8 +510,8 @@ export default function Deals({ branch }) {
                 {savingTarget ? "Saving..." : (isEditingTarget ? "Save Changes" : "Set Target")}
               </button>
               {isEditingTarget && (
-                <button 
-                  className={styles.cancelBtn} 
+                <button
+                  className={styles.cancelBtn}
                   onClick={() => {
                     setMonthlyTarget(localStorage.getItem("crm_monthly_target") || "");
                     setIsEditingTarget(false);
@@ -825,12 +852,8 @@ export default function Deals({ branch }) {
               <input placeholder="Deal Name" required value={formData.deal_name} onChange={e => setFormData({ ...formData, deal_name: e.target.value })} style={{ padding: "0.8rem", border: "1px solid #e0e2e9", borderRadius: "8px" }} />
               <input placeholder="Company" required value={formData.company} onChange={e => setFormData({ ...formData, company: e.target.value })} style={{ padding: "0.8rem", border: "1px solid #e0e2e9", borderRadius: "8px" }} />
 
-              <select value={formData.pipeline} onChange={e => setFormData({ ...formData, pipeline: e.target.value })} style={{ padding: "0.8rem", border: "1px solid #e0e2e9", borderRadius: "8px" }}>
-                <option value="" disabled>Select Pipeline</option>
-                {Object.keys(pipelineMap).map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
+              {/* Pipeline selected automatically based on current tab */}
+
 
               <select value={formData.stage} onChange={e => setFormData({ ...formData, stage: e.target.value })} style={{ padding: "0.8rem", border: "1px solid #e0e2e9", borderRadius: "8px" }}>
                 <option value="Proposal">Proposal</option>
