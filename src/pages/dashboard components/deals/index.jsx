@@ -25,6 +25,12 @@ export default function Deals({ branch }) {
     won: [],
     lost: []
   });
+  const [allDealsRaw, setAllDealsRaw] = useState({
+    proposal: [],
+    negotiation: [],
+    won: [],
+    lost: []
+  });
   const [activePipeline, setActivePipeline] = useState(PIPELINE_TABS[0]);
   const [loading, setLoading] = useState(false);
   {/* const [analytics, setAnalytics] = useState({
@@ -107,48 +113,42 @@ export default function Deals({ branch }) {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Use the pluralized 'activePipeline.type' for the backend query
-      const pipelineRes = await api.get(`/api/dashboard/pipeline?type=${activePipeline.type}`, { headers });
-      console.log(`DEALS RAW DATA (${activePipeline.type}):`, pipelineRes.data);
+      // Fetch all pipeline data once to populate the table, then filter locally for Kanban
+      // If backend returns data for all pipelines by default when 'type' is omitted, we use that.
+      // Otherwise, we default to showing all across the table.
+      const pipelineRes = await api.get(`/api/dashboard/pipeline`, { headers });
+      console.log(`DEALS RAW DATA (All):`, pipelineRes.data);
 
       const rawData = pipelineRes.data || {};
 
-      // Map data with safety guards
-      // ✅ Robust Fix: Filter deals by active tab to ensure data separation
-      // Handles both string and object formats for d.pipeline
-      const filterDeals = (deals) => {
+      // Local filtering for Kanban view stages
+      const filterDealsForKanban = (deals) => {
         if (!Array.isArray(deals)) return [];
         return deals.filter(d => {
-          // Extract label safely
-          let dealPipelineValue = d.pipeline;
-          if (typeof dealPipelineValue === "object" && dealPipelineValue !== null) {
-            dealPipelineValue = dealPipelineValue.label || dealPipelineValue.type || "";
-          }
-          const dealPipeline = String(dealPipelineValue || "").toLowerCase();
+          // Extract pipeline from deal
+          let dpv = d.pipeline;
+          if (typeof dpv === "object" && dpv !== null) dpv = dpv.label || dpv.type || "";
+          const dealPipeline = String(dpv || "").toLowerCase();
 
           const activeType = activePipeline.type.toLowerCase();
           const activeLabel = activePipeline.label.toLowerCase();
 
-          // 1. If currently on "Deals Pipeline" tab, it acts as a CATCH-ALL
+          // Catch-all for "Deals Pipeline"
           if (activeType === "deals" || activeLabel === "deals pipeline") {
-            const otherPipelines = ["sales pipeline", "sales", "partnership", "enterprise"];
-            const matchesOther = otherPipelines.includes(dealPipeline);
-            return !matchesOther;
+            const others = ["sales pipeline", "sales", "partnership", "enterprise"];
+            return !others.includes(dealPipeline);
           }
-
-          // 2. For other tabs, only show if it specifically matches
           return dealPipeline === activeLabel || dealPipeline === activeType;
         });
       };
 
-      const newPipelineMap = {
-        proposal: filterDeals(rawData.proposal),
-        negotiation: filterDeals(rawData.negotiation),
-        won: filterDeals(rawData.won),
-        lost: filterDeals(rawData.lost)
-      };
-
-      setPipelineMap(newPipelineMap);
+      setPipelineMap({
+        proposal: filterDealsForKanban(rawData.proposal),
+        negotiation: filterDealsForKanban(rawData.negotiation),
+        won: filterDealsForKanban(rawData.won),
+        lost: filterDealsForKanban(rawData.lost)
+      });
+      setAllDealsRaw(rawData); // Store raw data for unfiltered table
 
       // 2. Fetch Win/Loss Analytics Graph
       const winLossRes = await api.get("/api/dashboard/win-loss", { headers }).catch(err => {
@@ -211,15 +211,13 @@ export default function Deals({ branch }) {
     fetchData();
   }, [activePipeline, branch]); // Refetch when pipeline tab changes
 
-  // Create a flat array of all deals from CURRENT pipeline
-  const flattenedDeals = [
-    ...pipelineMap.proposal.map(d => ({ ...d, stage: "Proposal", pipeline: activePipeline.label })),
-    ...pipelineMap.negotiation.map(d => ({ ...d, stage: "Negotiation", pipeline: activePipeline.label })),
-    ...pipelineMap.won.map(d => ({ ...d, stage: "Won", pipeline: activePipeline.label })),
-    ...pipelineMap.lost.map(d => ({ ...d, stage: "Lost", pipeline: activePipeline.label }))
+  // Create a flat array of all deals from RAW data (across all pipelines) for the table
+  const allDeals = [
+    ...(allDealsRaw?.proposal || []).map(d => ({ ...d, stage: "Proposal" })),
+    ...(allDealsRaw?.negotiation || []).map(d => ({ ...d, stage: "Negotiation" })),
+    ...(allDealsRaw?.won || []).map(d => ({ ...d, stage: "Won" })),
+    ...(allDealsRaw?.lost || []).map(d => ({ ...d, stage: "Lost" }))
   ];
-
-  const allDeals = flattenedDeals;
 
 
 
@@ -823,7 +821,7 @@ export default function Deals({ branch }) {
                 <td>{d.value}</td>
                 <td>{d.owner}</td>
                 <td>{d.close}</td>
-                <td>{d.pipeline}</td>
+                <td>{d.pipeline || "Deals Pipeline"}</td>
                 <td>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     <button onClick={() => openEditModal(d)} style={{ border: "none", background: "none", cursor: "pointer" }}>✏️</button>

@@ -15,18 +15,18 @@ const DEFAULT_ROLES = [
         name: "Super Admin",
         description: "Unrestricted access to everything — system-wide control",
         color: "#6366f1",
-        usersAssigned: 1,
+        usersAssigned: 0,
         permissions: Object.fromEntries(
             MODULES.map(m => [m, Object.fromEntries(PERMISSIONS.map(p => [p, true]))])
         ),
-        assignedUsers: ["Varshini (Super Admin)"]
+        assignedUsers: []
     },
     {
         id: 2,
         name: "Admin",
         description: "Full access across all modules, can manage users and settings",
         color: "#8b5cf6",
-        usersAssigned: 2,
+        usersAssigned: 0,
         permissions: Object.fromEntries(
             MODULES.map(m => [
                 m,
@@ -35,14 +35,14 @@ const DEFAULT_ROLES = [
                 )
             ])
         ),
-        assignedUsers: ["Ravi (Admin)", "Anu (Admin)"]
+        assignedUsers: []
     },
     {
         id: 3,
         name: "Manager",
         description: "Leads, Deals, Contacts, Reports with full access; no system settings",
         color: "#10b981",
-        usersAssigned: 5,
+        usersAssigned: 0,
         permissions: Object.fromEntries(
             MODULES.map(m => [
                 m,
@@ -60,14 +60,14 @@ const DEFAULT_ROLES = [
                 )
             ])
         ),
-        assignedUsers: ["Rohan (Mgr)", "Sneha (Mgr)", "Dev (Mgr)"]
+        assignedUsers: []
     },
     {
         id: 4,
         name: "Employee",
         description: "View and create access to Leads, Contacts, Tasks, and Tickets only",
         color: "#f59e0b",
-        usersAssigned: 8,
+        usersAssigned: 0,
         permissions: Object.fromEntries(
             MODULES.map(m => [
                 m,
@@ -81,7 +81,7 @@ const DEFAULT_ROLES = [
                 )
             ])
         ),
-        assignedUsers: ["Kiran (Emp)", "Amit (Emp)", "Priya (Emp)"]
+        assignedUsers: []
     }
 ];
 
@@ -108,6 +108,7 @@ export default function RBAC({ setActive }) {
         if (stored) {
             const invite = JSON.parse(stored);
             setPendingInvite(invite);
+            setNewUser(invite.name); // Pre-fill the "Add New Person" input
             
             // Auto-prepare the role editor
             const freshRole = {
@@ -115,9 +116,9 @@ export default function RBAC({ setActive }) {
                 name: "",
                 description: "",
                 color: "#6366f1",
-                usersAssigned: 1,
+                usersAssigned: 0, // Starts at 0 until "Add" is clicked or user selected
                 permissions: emptyPermissions(),
-                assignedUsers: [invite.name], // Auto-assign the new person
+                assignedUsers: [], // Let user click "Add" to confirm
                 isNew: true
             };
             setEditingRole(freshRole);
@@ -150,7 +151,26 @@ export default function RBAC({ setActive }) {
             });
             const raw = response.data;
             const members = Array.isArray(raw) ? raw : (raw?.members || raw?.data || []);
-            setTeamMembers(members.map(m => m.name || m.email)); // Extract names for the simpler UI
+            
+            // 1. Update the searchable team members list
+            setTeamMembers(members.map(m => m.name || m.email));
+
+            // 2. Sync roles with real team data
+            setRoles(prevRoles => {
+                return prevRoles.map(role => {
+                    // Find all members that belong to THIS role
+                    const matchedMembers = members
+                        .filter(m => (m.role || "").toLowerCase() === role.name.toLowerCase())
+                        .map(m => m.name || m.email);
+                    
+                    return {
+                        ...role,
+                        assignedUsers: matchedMembers,
+                        usersAssigned: matchedMembers.length
+                    };
+                });
+            });
+
         } catch (error) {
             console.error("Error fetching team for RBAC:", error);
         } finally {
@@ -199,15 +219,39 @@ export default function RBAC({ setActive }) {
         }
 
         // Save role locally
-        if (editingRole.isNew) {
-            const { isNew, ...newRole } = editingRole;
-            setRoles(prev => [...prev, { ...newRole, usersAssigned: newRole.assignedUsers.length }]);
-        } else {
-            setRoles(prev => prev.map(r => r.id === editingRole.id
-                ? { ...editingRole, usersAssigned: editingRole.assignedUsers.length }
-                : r
-            ));
-        }
+        setRoles(prev => {
+            // Check if a role with this name already exists (to prevent duplicates)
+            const existingRoleIndex = prev.findIndex(r => r.name.toLowerCase() === editingRole.name.toLowerCase());
+            
+            if (existingRoleIndex !== -1 && (editingRole.isNew || prev[existingRoleIndex].id !== editingRole.id)) {
+                // Merge with existing role if names match
+                const updated = [...prev];
+                const existing = updated[existingRoleIndex];
+                
+                // Combine assigned users and ensure uniqueness
+                const allUsers = [...new Set([...existing.assignedUsers, ...editingRole.assignedUsers])];
+                
+                updated[existingRoleIndex] = {
+                    ...existing,
+                    ...editingRole,
+                    id: existing.id, // keep original ID
+                    assignedUsers: allUsers,
+                    usersAssigned: allUsers.length,
+                    isNew: false
+                };
+                return updated;
+            }
+
+            if (editingRole.isNew) {
+                const { isNew, ...newRole } = editingRole;
+                return [...prev, { ...newRole, usersAssigned: newRole.assignedUsers.length }];
+            } else {
+                return prev.map(r => r.id === editingRole.id
+                    ? { ...editingRole, usersAssigned: editingRole.assignedUsers.length }
+                    : r
+                );
+            }
+        });
         setView("list");
         setEditingRole(null);
     };
@@ -332,6 +376,7 @@ export default function RBAC({ setActive }) {
                             </div>
                             <div className={styles.userList}>
                                 {/* PENDING INVITE SECTION */}
+                                 {/* PENDING INVITE HIGHLIGHT (Only if invite exists) */}
                                 {pendingInvite && (
                                     <div className={styles.newUserHighlight}>
                                         <div className={styles.sectionLabel}>Pending Invitation</div>
@@ -353,31 +398,29 @@ export default function RBAC({ setActive }) {
                                     </div>
                                 )}
 
-                                {/* MANUAL NEW USER INPUT */}
-                                {!pendingInvite && (
-                                    <div className={styles.manualUserInput}>
-                                        <div className={styles.sectionLabel}>Add New Person</div>
-                                        <div className={styles.inputGroup}>
-                                            <input 
-                                                className={styles.input} 
-                                                placeholder="Enter full name of new hire..."
-                                                value={newUser}
-                                                onChange={e => setNewUser(e.target.value)}
-                                            />
-                                            <button 
-                                                className={styles.addBtn}
-                                                onClick={() => {
-                                                    if (newUser.trim()) {
-                                                        toggleUser(newUser.trim());
-                                                        setNewUser("");
-                                                    }
-                                                }}
-                                            >
-                                                Add
-                                            </button>
-                                        </div>
+                                {/* ADD NEW PERSON SECTION (Always visible & pre-filled if invite exists) */}
+                                <div className={styles.manualUserInput}>
+                                    <div className={styles.sectionLabel}>Add New Person</div>
+                                    <div className={styles.inputGroup}>
+                                        <input 
+                                            className={styles.input} 
+                                            placeholder="Enter full name of new hire..."
+                                            value={newUser}
+                                            onChange={e => setNewUser(e.target.value)}
+                                        />
+                                        <button 
+                                            className={styles.addBtn}
+                                            onClick={() => {
+                                                if (newUser.trim()) {
+                                                    toggleUser(newUser.trim());
+                                                    setNewUser("");
+                                                }
+                                            }}
+                                        >
+                                            Add
+                                        </button>
                                     </div>
-                                )}
+                                </div>
 
                                 <div className={styles.sectionLabel}>Existing Members</div>
                                 {filteredUsers.map(user => (

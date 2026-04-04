@@ -338,7 +338,7 @@ export default function Main({ active, branch, setActive }) {
                             </div>
                             <div className={styles.pieContainer}>
                                 <ResponsiveContainer width="100%" height={220}>
-                                    <PieChart>
+                                    <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="pieGrad1" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="0%" stopColor="#7b8cff" />
@@ -359,6 +359,8 @@ export default function Main({ active, branch, setActive }) {
                                         </defs>
                                         <Pie
                                             data={leadStatusData}
+                                            cx="50%"
+                                            cy="50%"
                                             innerRadius={60}
                                             outerRadius={85}
                                             paddingAngle={5}

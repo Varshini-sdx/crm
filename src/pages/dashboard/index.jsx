@@ -93,6 +93,8 @@ export default function Dashboard() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showMoreActions, setShowMoreActions] = useState(false);
 
+    const isSidebarExpanded = !isCollapsed || isMobileMenuOpen;
+
     // Refs for dropdowns
     const notificationRef = useRef(null);
     const profileRef = useRef(null);
@@ -110,6 +112,17 @@ export default function Dashboard() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [openDropdown]);
+
+    // Resize listener: close mobile menu when switching to desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 768) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
 
     const renderContent = () => {
@@ -163,7 +176,7 @@ export default function Dashboard() {
         <>
 
 
-            <div className={`${styles.layout} ${isCollapsed ? styles.collapsedLayout : ""} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}>
+            <div className={`${styles.layout} ${isCollapsed && !isMobileMenuOpen ? styles.collapsedLayout : ""} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}>
                 {/* Mobile Sidebar Overlay */}
                 <AnimatePresence>
                     {isMobileMenuOpen && (
@@ -178,17 +191,17 @@ export default function Dashboard() {
                 </AnimatePresence>
 
                 {/* Sidebar */}
-                <aside className={`${styles.sidebar} ${isCollapsed ? styles.sidebarCollapsed : styles.sidebarExpanded} ${isMobileMenuOpen ? styles.mobileSidebarVisible : ""}`}>
+                <aside className={`${styles.sidebar} ${isSidebarExpanded ? styles.sidebarExpanded : styles.sidebarCollapsed} ${isMobileMenuOpen ? styles.mobileSidebarVisible : ""}`}>
 
                     <div className={styles.orgBlock}>
                         <div className={styles.logoCircle} data-label="Rvh Crm">RVH</div>
-                        {!isCollapsed && <h3 className={styles.orgName}>{fakeOrg.name}</h3>}
+                        {isSidebarExpanded && <h3 className={styles.orgName}>{fakeOrg.name}</h3>}
                         <button className={styles.mobileCloseBtn} onClick={() => setIsMobileMenuOpen(false)}>
                             <X size={24} />
                         </button>
                     </div>
 
-                    {!isCollapsed && (
+                    {isSidebarExpanded && (
                         <div className={styles.branchSwitcher}>
                             <button
                                 className={styles.branchPill}
@@ -240,23 +253,23 @@ export default function Dashboard() {
                                     : active === name
                                         ? styles.active
                                         : ""
-                                    } ${isCollapsed ? styles.collapsedNavItem : ""}`}
+                                    } ${!isSidebarExpanded ? styles.collapsedNavItem : ""}`}
                                 onClick={() => setActive(name)}
                                 data-label={name}
                             >
                                 <Icon size={20} />
-                                {!isCollapsed && <span>{name}</span>}
+                                {isSidebarExpanded && <span>{name}</span>}
                             </button>
                         ))}
 
 
                         <button
-                            className={`${styles.navItem} ${["Workspace", "Team", "Marketing", "Campaigns"].includes(active) ? styles.active : ""} ${isCollapsed ? styles.collapsedNavItem : ""}`}
+                            className={`${styles.navItem} ${["Workspace", "Team", "Marketing", "Campaigns"].includes(active) ? styles.active : ""} ${!isSidebarExpanded ? styles.collapsedNavItem : ""}`}
                             onClick={() => setActive("Workspace")}
                             data-label="Workspace"
                         >
                             <Layout size={20} />
-                            {!isCollapsed && <span>Workspace</span>}
+                            {isSidebarExpanded && <span>Workspace</span>}
                         </button>
                     </nav>
 
