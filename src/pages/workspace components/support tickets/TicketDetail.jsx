@@ -23,7 +23,8 @@ import {
     AlertTriangle,
     Circle,
     Edit3,
-    Check
+    Check,
+    Loader2
 } from "lucide-react";
 import ticketService from "@/api/ticketService";
 
@@ -40,39 +41,6 @@ const priorityColors = {
     Low: { bg: "#f0fdf4", color: "#16a34a" }
 };
 
-// Mock conversation messages
-const seedMessages = (ticketId) => [
-    {
-        id: 1,
-        type: "customer",
-        author: "Customer",
-        time: "10:02 AM",
-        body: "Hi team, I'm experiencing the issue described in this ticket. Please let me know the status."
-    },
-    {
-        id: 2,
-        type: "agent",
-        author: "Support Agent",
-        time: "10:45 AM",
-        body: `Thanks for reaching out! We've logged this as ${ticketId} and our team is actively looking into it. We'll keep you posted.`
-    },
-    {
-        id: 3,
-        type: "customer",
-        author: "Customer",
-        time: "11:30 AM",
-        body: "Any update? This is blocking our team's workflow."
-    }
-];
-
-const seedNotes = [
-    {
-        id: 1,
-        author: "Arjun Sharma",
-        time: "11:00 AM",
-        body: "Reproduced the issue locally on staging. Looks like a race condition in the pipeline loader. Escalating to backend team."
-    }
-];
 
 // SLA countdown helper
 const useSlaTimer = (initialMinutes) => {
@@ -94,8 +62,9 @@ const useSlaTimer = (initialMinutes) => {
 
 export const TicketDetail = ({ ticket, onBack }) => {
     const [activeTab, setActiveTab] = useState("conversation");
-    const [messages, setMessages] = useState(seedMessages(ticket.id));
-    const [notes, setNotes] = useState(seedNotes);
+    const [messages, setMessages] = useState([]);
+    const [notes, setNotes] = useState([]);
+    const [activity, setActivity] = useState([]);
     const [draft, setDraft] = useState("");
     const [noteDraft, setNoteDraft] = useState("");
     const [localStatus, setLocalStatus] = useState(ticket.status);
@@ -103,11 +72,41 @@ export const TicketDetail = ({ ticket, onBack }) => {
     const [localAssignee, setLocalAssignee] = useState(ticket.assignee);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [loadingThread, setLoadingThread] = useState(true);
     const threadRef = useRef(null);
 
-    // SLA timers  (first response ~82 min, resolution ~1210 min)
+    // SLA timers (mock logic for now as it's UI intensive)
     const firstResp = useSlaTimer(ticket.slaStatus === "Breached" ? -15 : 82);
     const resolution = useSlaTimer(ticket.slaStatus === "Breached" ? -15 : 1210);
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoadingThread(true);
+            const [msgs, act] = await Promise.all([
+                ticketService.getMessages(ticket.id).catch(() => []),
+                ticketService.getActivity(ticket.id).catch(() => [])
+            ]);
+            setMessages(msgs);
+            setActivity(act);
+            
+            // Filter internal notes from activity if the backend returns them there, 
+            // or assume they might be in messages with a specific flag.
+            // For now, let's assume notes are provided via a separate GET if possible, 
+            // but the user only gave a POST for notes. 
+            // If they are in the activity, we'll extract them.
+            const internalNotes = msgs.filter(m => m.isInternal || m.type === "note");
+            setNotes(internalNotes);
+            
+        } catch (err) {
+            console.error("❌ Failed to fetch ticket details:", err);
+        } finally {
+            setLoadingThread(false);
+        }
+    }, [ticket.id]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     useEffect(() => {
         if (threadRef.current) {
@@ -155,27 +154,26 @@ export const TicketDetail = ({ ticket, onBack }) => {
         }
     };
 
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (!draft.trim()) return;
-        setMessages(prev => [...prev, {
-            id: Date.now(),
-            type: "agent",
-            author: "You",
-            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            body: draft.trim()
-        }]);
-        setDraft("");
+        try {
+            const newMsg = await ticketService.sendMessage(ticket.id, draft.trim());
+            setMessages(prev => [...prev, newMsg]);
+            setDraft("");
+        } catch (err) {
+            alert("Failed to send message.");
+        }
     };
 
-    const addNote = () => {
+    const addNote = async () => {
         if (!noteDraft.trim()) return;
-        setNotes(prev => [...prev, {
-            id: Date.now(),
-            author: "You",
-            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            body: noteDraft.trim()
-        }]);
-        setNoteDraft("");
+        try {
+            const newNote = await ticketService.addNote(ticket.id, noteDraft.trim());
+            setNotes(prev => [...prev, newNote]);
+            setNoteDraft("");
+        } catch (err) {
+            alert("Failed to add note.");
+        }
     };
 
     const currentStatus = statusConfig[localStatus] || statusConfig["Open"];
@@ -358,27 +356,19 @@ export const TicketDetail = ({ ticket, onBack }) => {
                     <div className={styles.detailPanel}>
                         <div className={styles.panelTitle}>Activity Timeline</div>
                         <div className={styles.activityList}>
-                            <div className={styles.activityItem}>
-                                <div className={styles.activityDot} style={{ background: "#3b82f6" }} />
-                                <div>
-                                    <span className={styles.activityText}>Ticket created by {ticket.submittedBy}</span>
-                                    <span className={styles.activityTime}>{ticket.createdAt}</span>
-                                </div>
-                            </div>
-                            <div className={styles.activityItem}>
-                                <div className={styles.activityDot} style={{ background: "#f59e0b" }} />
-                                <div>
-                                    <span className={styles.activityText}>Assigned to {localAssignee}</span>
-                                    <span className={styles.activityTime}>{ticket.updatedAt}</span>
-                                </div>
-                            </div>
-                            <div className={styles.activityItem}>
-                                <div className={styles.activityDot} style={{ background: "#8b5cf6" }} />
-                                <div>
-                                    <span className={styles.activityText}>Status set to {localStatus}</span>
-                                    <span className={styles.activityTime}>{ticket.updatedAt}</span>
-                                </div>
-                            </div>
+                            {activity.length === 0 ? (
+                                <p className={styles.emptyActivity}>No activity recorded yet.</p>
+                            ) : (
+                                activity.map((item, i) => (
+                                    <div key={i} className={styles.activityItem}>
+                                        <div className={styles.activityDot} style={{ background: item.color || "#3b82f6" }} />
+                                        <div>
+                                            <span className={styles.activityText}>{item.text || item.description || item.message}</span>
+                                            <span className={styles.activityTime}>{item.time || item.createdAt}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
 
                         <div style={{ marginTop: "24px" }}>
@@ -420,43 +410,58 @@ export const TicketDetail = ({ ticket, onBack }) => {
 
                     {/* Thread */}
                     <div className={styles.threadBody} ref={threadRef}>
-                        {activeTab === "conversation" && messages.map(msg => (
-                            <div key={msg.id} className={`${styles.msg} ${msg.type === "agent" ? styles.msgAgent : styles.msgCustomer}`}>
-                                <div className={styles.msgAvatar} style={{
-                                    background: msg.type === "agent" ? "#e0e7ff" : "#fce7f3",
-                                    color: msg.type === "agent" ? "#4f46e5" : "#be185d"
-                                }}>
-                                    {msg.author.split(" ").map(w => w[0]).join("").slice(0, 2)}
-                                </div>
-                                <div className={styles.msgBubbleWrap}>
-                                    <div className={styles.msgMeta}>
-                                        <strong>{msg.author}</strong>
-                                        <span>{msg.time}</span>
-                                    </div>
-                                    <div className={`${styles.msgBubble} ${msg.type === "agent" ? styles.msgBubbleAgent : styles.msgBubbleCustomer}`}>
-                                        {msg.body}
-                                    </div>
-                                </div>
+                        {loadingThread ? (
+                            <div className={styles.threadLoading}>
+                                <Loader2 className={styles.spin} size={32} />
+                                <p>Loading conversation...</p>
                             </div>
-                        ))}
+                        ) : (
+                            <>
+                                {activeTab === "conversation" && messages.length === 0 && (
+                                    <p className={styles.emptyThread}>No messages in this conversation yet.</p>
+                                )}
+                                {activeTab === "conversation" && messages.map(msg => (
+                                    <div key={msg.id} className={`${styles.msg} ${msg.type === "agent" ? styles.msgAgent : styles.msgCustomer}`}>
+                                        <div className={styles.msgAvatar} style={{
+                                            background: msg.type === "agent" ? "#e0e7ff" : "#fce7f3",
+                                            color: msg.type === "agent" ? "#4f46e5" : "#be185d"
+                                        }}>
+                                            {(msg.author || "U").split(" ").map(w => w[0]).join("").slice(0, 2)}
+                                        </div>
+                                        <div className={styles.msgBubbleWrap}>
+                                            <div className={styles.msgMeta}>
+                                                <strong>{msg.author || "User"}</strong>
+                                                <span>{msg.time || msg.createdAt}</span>
+                                            </div>
+                                            <div className={`${styles.msgBubble} ${msg.type === "agent" ? styles.msgBubbleAgent : styles.msgBubbleCustomer}`}>
+                                                {msg.body}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
 
-                        {activeTab === "notes" && notes.map(note => (
-                            <div key={note.id} className={`${styles.msg} ${styles.msgNote}`}>
-                                <div className={styles.msgAvatar} style={{ background: "#fef9c3", color: "#d97706" }}>
-                                    {note.author.split(" ").map(w => w[0]).join("").slice(0, 2)}
-                                </div>
-                                <div className={styles.msgBubbleWrap}>
-                                    <div className={styles.msgMeta}>
-                                        <strong>{note.author}</strong>
-                                        <span>{note.time}</span>
-                                        <span className={styles.noteLabel}><Lock size={10} /> Internal</span>
+                                {activeTab === "notes" && notes.length === 0 && (
+                                    <p className={styles.emptyThread}>No internal notes added yet.</p>
+                                )}
+                                {activeTab === "notes" && notes.map(note => (
+                                    <div key={note.id} className={`${styles.msg} ${styles.msgNote}`}>
+                                        <div className={styles.msgAvatar} style={{ background: "#fef9c3", color: "#d97706" }}>
+                                            {(note.author || "A").split(" ").map(w => w[0]).join("").slice(0, 2)}
+                                        </div>
+                                        <div className={styles.msgBubbleWrap}>
+                                            <div className={styles.msgMeta}>
+                                                <strong>{note.author || "Agent"}</strong>
+                                                <span>{note.time || note.createdAt}</span>
+                                                <span className={styles.noteLabel}><Lock size={10} /> Internal</span>
+                                            </div>
+                                            <div className={`${styles.msgBubble} ${styles.msgBubbleNote}`}>
+                                                {note.body}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className={`${styles.msgBubble} ${styles.msgBubbleNote}`}>
-                                        {note.body}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                                ))}
+                            </>
+                        )}
                     </div>
 
                     {/* Compose */}

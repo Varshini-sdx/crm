@@ -20,98 +20,6 @@ import {
 } from "lucide-react";
 import ticketService from "@/api/ticketService";
 
-const mockTickets = [
-    {
-        id: "TKT-001",
-        title: "CRM dashboard not loading pipeline data",
-        description: "The pipeline section shows a blank screen after login.",
-        status: "Open",
-        priority: "High",
-        category: "Bug",
-        assignee: "Arjun Sharma",
-        submittedBy: "Priya Mehta",
-        createdAt: "Feb 28, 2026",
-        updatedAt: "1 hour ago",
-        responses: 3,
-        slaStatus: "On Track",
-        timeRemaining: "01h 22m"
-    },
-    {
-        id: "TKT-002",
-        title: "Unable to export leads to CSV",
-        description: "Export button does nothing when clicked.",
-        status: "In Progress",
-        priority: "Medium",
-        category: "Feature",
-        assignee: "Rohan Verma",
-        submittedBy: "Dev Nair",
-        createdAt: "Feb 26, 2026",
-        updatedAt: "3 hours ago",
-        responses: 5,
-        slaStatus: "Breached",
-        timeRemaining: "-00h 15m"
-    },
-    {
-        id: "TKT-003",
-        title: "Email campaign analytics not updating",
-        description: "Stats for the Feb campaign haven't refreshed in 2 days.",
-        status: "Open",
-        priority: "High",
-        category: "Bug",
-        assignee: "Sneha Kapoor",
-        submittedBy: "Arjun Sharma",
-        createdAt: "Feb 25, 2026",
-        updatedAt: "Yesterday",
-        responses: 2,
-        slaStatus: "Breached",
-        timeRemaining: "-02h 40m"
-    },
-    {
-        id: "TKT-004",
-        title: "WhatsApp integration setup guide request",
-        description: "Need documentation on how to connect WhatsApp Business API.",
-        status: "Resolved",
-        priority: "Low",
-        category: "Support",
-        assignee: "Priya Mehta",
-        submittedBy: "Sneha Kapoor",
-        createdAt: "Feb 22, 2026",
-        updatedAt: "Feb 23, 2026",
-        responses: 8,
-        slaStatus: "On Track",
-        timeRemaining: "Met"
-    },
-    {
-        id: "TKT-005",
-        title: "Contact duplicate merge feature",
-        description: "Request to add bulk duplicate detection and merge in contacts.",
-        status: "Closed",
-        priority: "Medium",
-        category: "Feature",
-        assignee: "Dev Nair",
-        submittedBy: "Rohan Verma",
-        createdAt: "Feb 18, 2026",
-        updatedAt: "Feb 20, 2026",
-        responses: 6,
-        slaStatus: "On Track",
-        timeRemaining: "Met"
-    },
-    {
-        id: "TKT-006",
-        title: "Workspace settings not saving timezone",
-        description: "Every time I log out the timezone resets to UTC.",
-        status: "In Progress",
-        priority: "Low",
-        category: "Bug",
-        assignee: "Arjun Sharma",
-        submittedBy: "Priya Mehta",
-        createdAt: "Mar 1, 2026",
-        updatedAt: "30 mins ago",
-        responses: 1,
-        slaStatus: "On Track",
-        timeRemaining: "03h 05m"
-    }
-];
 
 const priorityColors = {
     High: { bg: "#fef2f2", color: "#dc2626" },
@@ -152,9 +60,8 @@ export const SupportTickets = () => {
             setError(null);
         } catch (err) {
             console.error("❌ Support Tickets Fetch Error:", err);
-            // Fallback to mock data if backend not connected, but set an error flag
-            setTickets(mockTickets);
-            setError("Couldn't sync with live server. Displaying demo data.");
+            setTickets([]);
+            setError("Couldn't sync with live server. Please check your connection.");
         } finally {
             setLoading(false);
         }
