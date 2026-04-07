@@ -14,9 +14,9 @@ import {
     MessageSquare,
     Tag,
     User,
-    MoreVertical,
     TrendingUp,
-    Loader2
+    Loader2,
+    MoreVertical
 } from "lucide-react";
 import ticketService from "@/api/ticketService";
 
@@ -55,8 +55,7 @@ export const SupportTickets = () => {
         try {
             setLoading(true);
             const data = await ticketService.getTickets();
-            const formatted = Array.isArray(data) ? data : (data?.tickets || data?.data || []);
-            setTickets(formatted);
+            setTickets(data);
             setError(null);
         } catch (err) {
             console.error("❌ Support Tickets Fetch Error:", err);
@@ -73,9 +72,9 @@ export const SupportTickets = () => {
 
     const filtered = tickets.filter(t => {
         const matchesSearch =
-            t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.submittedBy.toLowerCase().includes(searchTerm.toLowerCase());
+            (t.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (t.id || "").toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (t.submitted_by || "").toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === "All" || t.status === statusFilter;
         const matchesPriority = priorityFilter === "All" || t.priority === priorityFilter;
         return matchesSearch && matchesStatus && matchesPriority;
@@ -222,13 +221,13 @@ export const SupportTickets = () => {
                                     <td colSpan={10} className={styles.emptyRow}>No tickets match your filters.</td>
                                 </tr>
                             ) : (
-                                filtered.map(ticket => {
+                                filtered.map((ticket, index) => {
                                     const status = statusConfig[ticket.status] || statusConfig["Open"];
                                     const StatusIcon = status.icon;
                                     const priority = priorityColors[ticket.priority] || priorityColors["Medium"];
                                     return (
                                         <tr
-                                            key={ticket.id}
+                                            key={ticket._id || ticket.id || index}
                                             className={styles.tableRow}
                                             onClick={() => setSelectedTicket(ticket)}
                                             style={{ cursor: "pointer" }}
@@ -266,9 +265,9 @@ export const SupportTickets = () => {
                                                 </div>
                                             </td>
                                             <td>
-                                                <div className={`${styles.slaBadge} ${ticket.slaStatus === "Breached" ? styles.slaBreached : styles.slaOnTrack}`}>
-                                                    <span className={styles.slaDot}>{ticket.slaStatus === "Breached" ? "🔴" : "🟢"}</span>
-                                                    {ticket.slaStatus}
+                                                <div className={`${styles.slaBadge} ${(ticket.sla_status || ticket.slaStatus) === "Breached" ? styles.slaBreached : styles.slaOnTrack}`}>
+                                                    <span className={styles.slaDot}>{(ticket.sla_status || ticket.slaStatus) === "Breached" ? "🔴" : "🟢"}</span>
+                                                    {(ticket.sla_status || ticket.slaStatus)}
                                                 </div>
                                             </td>
                                             <td>
@@ -277,7 +276,7 @@ export const SupportTickets = () => {
                                                         className={styles.miniAvatar}
                                                         style={{ background: "#e0e7ff", color: "#4f46e5" }}
                                                     >
-                                                        {ticket.assignee.split(" ").map(w => w[0]).join("").slice(0, 2)}
+                                                        {(ticket.assignee || "?").split(" ").map(w => w[0]).join("").slice(0, 2)}
                                                     </div>
                                                     <span>{ticket.assignee}</span>
                                                 </div>
@@ -285,11 +284,11 @@ export const SupportTickets = () => {
                                             <td>
                                                 <div className={styles.personCell}>
                                                     <User size={13} color="#94a3b8" />
-                                                    <span>{ticket.submittedBy}</span>
+                                                    <span>{(ticket.submitted_by || ticket.submittedBy)}</span>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className={styles.timeCell}>{ticket.updatedAt}</span>
+                                                <span className={styles.timeCell}>{(ticket.updated_at || ticket.updatedAt)}</span>
                                             </td>
                                             <td>
                                                 <button className={styles.moreBtn}>

@@ -47,7 +47,7 @@ export const AuditLogs = ({ setActive }) => {
         try {
             setLoading(true);
             const data = await auditService.getLogs();
-            setLogs(Array.isArray(data) ? data : (data?.logs || data?.data || []));
+            setLogs(data);
         } catch (err) {
             console.error("❌ Error fetching audit logs:", err);
             setError("Failed to load audit logs. Please try again.");
@@ -61,8 +61,8 @@ export const AuditLogs = ({ setActive }) => {
     }, [fetchLogs]);
 
     const filteredLogs = logs.filter(log => {
-        const matchesSearch = log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            log.record.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = (log.user || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (log.record || "").toLowerCase().includes(searchQuery.toLowerCase());
         const matchesModule = moduleFilter === "All" || log.module === moduleFilter;
         const matchesAction = actionFilter === "All" || log.action === actionFilter;
         return matchesSearch && matchesModule && matchesAction;

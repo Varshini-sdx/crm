@@ -29,6 +29,33 @@ export const Settings = ({ branch, setActive }) => {
             navigateTo: 'AuditLogs'
         },
         {
+            id: 'team',
+            title: 'Roles & Permissions (RBAC)',
+            desc: 'Define granular roles, access levels, and assign permissions to team members.',
+            icon: <ShieldCheck size={24} />,
+            status: 'Security',
+            type: 'team',
+            navigateTo: 'RBAC'
+        },
+        {
+            id: 'billing',
+            title: 'Billing & Subscriptions',
+            desc: 'Manage your plan, payment methods, and view transaction history.',
+            icon: <CreditCard size={24} />,
+            status: 'Pro Plan',
+            type: 'billing',
+            navigateTo: 'Billing'
+        },
+        {
+            id: 'performance',
+            title: 'Performance Scaling',
+            desc: 'Monitor system metrics, resource usage, and configure infrastructure limits.',
+            icon: <Gauge size={24} />,
+            status: 'Optimal',
+            type: 'performance',
+            navigateTo: 'PerformanceScaling'
+        },
+        {
             id: 'workspace',
             title: 'Workspace Configuration',
             desc: 'Manage your branch details, timezones, and display preferences.',
@@ -53,39 +80,12 @@ export const Settings = ({ branch, setActive }) => {
             type: 'security'
         },
         {
-            id: 'team',
-            title: 'Roles & Permissions (RBAC)',
-            desc: 'Define granular roles, access levels, and assign permissions to team members.',
-            icon: <ShieldCheck size={24} />,
-            status: 'Security',
-            type: 'team',
-            navigateTo: 'RBAC'
-        },
-        {
             id: 'integrations',
             title: 'Apps & Integrations',
             desc: 'Connect your favorite tools like Slack, WhatsApp API, and Google.',
             icon: <Puzzle size={24} />,
             status: '8 Connected',
             type: 'integrations'
-        },
-        {
-            id: 'billing',
-            title: 'Billing & Subscriptions',
-            desc: 'Manage your plan, payment methods, and view transaction history.',
-            icon: <CreditCard size={24} />,
-            status: 'Pro Plan',
-            type: 'billing',
-            navigateTo: 'Billing'
-        },
-        {
-            id: 'performance',
-            title: 'Performance Scaling',
-            desc: 'Monitor system metrics, resource usage, and configure infrastructure limits.',
-            icon: <Gauge size={24} />,
-            status: 'Optimal',
-            type: 'performance',
-            navigateTo: 'PerformanceScaling'
         }
     ];
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./ticketDetail.module.css";
 import {
     ArrowLeft,
@@ -76,10 +76,12 @@ export const TicketDetail = ({ ticket, onBack }) => {
     const threadRef = useRef(null);
 
     // SLA timers (mock logic for now as it's UI intensive)
-    const firstResp = useSlaTimer(ticket.slaStatus === "Breached" ? -15 : 82);
-    const resolution = useSlaTimer(ticket.slaStatus === "Breached" ? -15 : 1210);
+    const firstResp = useSlaTimer(ticket.sla_status === "Breached" ? -15 : 82);
+    const resolution = useSlaTimer(ticket.sla_status === "Breached" ? -15 : 1210);
 
     const fetchData = useCallback(async () => {
+        if (!ticket?.id) return;
+
         try {
             setLoadingThread(true);
             const [msgs, act] = await Promise.all([
@@ -89,11 +91,6 @@ export const TicketDetail = ({ ticket, onBack }) => {
             setMessages(msgs);
             setActivity(act);
             
-            // Filter internal notes from activity if the backend returns them there, 
-            // or assume they might be in messages with a specific flag.
-            // For now, let's assume notes are provided via a separate GET if possible, 
-            // but the user only gave a POST for notes. 
-            // If they are in the activity, we'll extract them.
             const internalNotes = msgs.filter(m => m.isInternal || m.type === "note");
             setNotes(internalNotes);
             
@@ -147,7 +144,6 @@ export const TicketDetail = ({ ticket, onBack }) => {
         try {
             setLocalStatus(newStatus);
             await ticketService.updateStatus(ticket.id, newStatus);
-            // Optional: alert or toast
         } catch (err) {
             alert("Failed to update status.");
             setLocalStatus(ticket.status);
@@ -278,7 +274,7 @@ export const TicketDetail = ({ ticket, onBack }) => {
                         </div>
                         <div className={styles.infoRow}>
                             <span className={styles.infoLabel}><User size={13} /> Contact</span>
-                            <span className={styles.infoValue}>{ticket.submittedBy}</span>
+                            <span className={styles.infoValue}>{ticket.submitted_by}</span>
                         </div>
                         <div className={styles.infoRow}>
                             <span className={styles.infoLabel}><Building2 size={13} /> Company</span>
@@ -330,11 +326,11 @@ export const TicketDetail = ({ ticket, onBack }) => {
                         <div className={styles.infoDivider} />
                         <div className={styles.infoRow}>
                             <span className={styles.infoLabel}><Calendar size={13} /> Created At</span>
-                            <span className={styles.infoValue}>{ticket.createdAt}</span>
+                            <span className={styles.infoValue}>{ticket.created_at}</span>
                         </div>
                         <div className={styles.infoRow}>
                             <span className={styles.infoLabel}><Clock size={13} /> Last Updated</span>
-                            <span className={styles.infoValue}>{ticket.updatedAt}</span>
+                            <span className={styles.infoValue}>{ticket.updated_at}</span>
                         </div>
                         <div className={styles.infoRow}>
                             <span className={styles.infoLabel}><Timer size={13} /> First Response</span>

@@ -466,10 +466,7 @@ export default function Dashboard() {
                                                         <FileText size={16} />
                                                         Knowledge Base
                                                     </button>
-                                                    <button className={styles.menuItem}>
-                                                        <Shield size={16} />
-                                                        Privacy Policy
-                                                    </button>
+
                                                     <button
                                                         className={styles.menuItem}
                                                         onClick={() => {

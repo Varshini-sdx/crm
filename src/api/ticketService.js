@@ -7,13 +7,33 @@ const getAuthHeader = () => {
 
 const TICKET_BASE_URL = "http://100.67.174.54:5000/api/support-tickets";
 
+const normalizeTicket = (t) => {
+    if (!t) return t;
+    return {
+        ...t,
+        id: t.id || t._id || t["Ticket #"],
+        title: t.title || t["Ticket"] || "Untitled Ticket",
+        status: t.status || t["Status"] || "Open",
+        priority: t.priority || t["Priority"] || "Medium",
+        category: t.category || t["Category"] || "Support",
+        assignee: t.assignee || t["Assignee"] || "Unassigned",
+        submitted_by: t.submitted_by || t.submittedBy || t["Submitted By"] || "Unknown",
+        updated_at: t.updated_at || t.updatedAt || t["Last Updated"] || "Unknown",
+        created_at: t.created_at || t.createdAt || t["Created At"] || "Unknown",
+        sla_status: t.sla_status || t.slaStatus || t["SLA Status"] || "Normal",
+        description: t.description || t["Description"] || ""
+    };
+};
+
 export const ticketService = {
     // Get all tickets
     getTickets: async () => {
         const response = await api.get(TICKET_BASE_URL, {
             headers: getAuthHeader()
         });
-        return response.data;
+        const data = response.data;
+        const tickets = Array.isArray(data) ? data : (data?.tickets || data?.data || []);
+        return tickets.map(normalizeTicket);
     },
 
     // Create a new ticket
@@ -21,7 +41,7 @@ export const ticketService = {
         const response = await api.post(TICKET_BASE_URL, ticket, {
             headers: getAuthHeader()
         });
-        return response.data;
+        return normalizeTicket(response.data);
     },
 
     // Assign ticket to a user

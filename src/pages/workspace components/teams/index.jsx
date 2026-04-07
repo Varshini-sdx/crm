@@ -311,7 +311,6 @@ export const Team = ({ branch, setActive }) => {
                             <th>Status</th>
                             <th>Location</th>
                             <th>Activity</th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -352,11 +351,6 @@ export const Team = ({ branch, setActive }) => {
                                 </td>
                                 <td>
                                     <span className={styles.lastActive}>{member.lastActive}</span>
-                                </td>
-                                <td>
-                                    <button className={styles.moreBtn}>
-                                        <MoreVertical size={16} />
-                                    </button>
                                 </td>
                             </tr>
                         ))}
